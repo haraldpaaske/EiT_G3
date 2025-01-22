@@ -155,6 +155,7 @@ for epoch in range(num_epochs):
 # Evaluate on test data
 model.eval()
 with torch.no_grad():
+    
     test_loss = criterion(model(X_test), y_test)
     print(f"Test Loss: {test_loss.item():.6f}")
 
