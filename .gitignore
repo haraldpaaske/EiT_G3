@@ -1,1 +1,35 @@
-.idea
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+env/
+venv/
+ENV/
+.venv/
+venv/*
+
+# Dependency files
+*.lock
+
+# IDE-specific files
+.vscode/
+.idea/
+
+# System-specific files
+.DS_Store
+Thumbs.db
+
+# Logs and temp files
+*.log
+*.tmp
+
+# Test and coverage reports
+.coverage
+.cache/
+*.cover
+.hypothesis/
+
+# Python-specific settings
+*.py~   # Temp Python files
