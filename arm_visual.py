@@ -2,20 +2,12 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.io as pio
 
-# Set default Plotly renderer
+# Force interactive mode
 pio.renderers.default = "browser"
 
-# Arm segment lengths
-L1 = 1.0  # Base to shoulder
-L2 = 1.0  # Shoulder to elbow
-L3 = 1.0  # Elbow to wrist
-L4 = 0.5  # Wrist to hand (end-effector)
-
-# Prime number for modular arithmetic (Not used in this implementation)
-Prime = 1223
 
 
-def inverse_kinematics(x, y, z, L1, L2, L3, L4):
+def inverse_kinematics(x, y, z, L1=1.0, L2=1.0, L3=1.0, L4=0.5):
     """
     Computes inverse kinematics for a 5-DOF robotic arm:
     - Rotating base
@@ -31,11 +23,11 @@ def inverse_kinematics(x, y, z, L1, L2, L3, L4):
     # Projection on the XY plane
     horizontal = np.sqrt(x**2 + y**2)
 
-    # Adjusted distance (hand should reach the target, not the elbow)
+    # Adjusted distance: The hand should reach the target, not the elbow
     distance_to_hand = np.sqrt(horizontal**2 + (z - L1)**2) - L4  # Adjust for wrist length
 
     if distance_to_hand > (L2 + L3) or distance_to_hand < abs(L2 - L3):
-        print(f"Target ({x}, {y}, {z}) is out of reach.")
+        print("Target is out of reach.")
         return None
 
     # Compute theta3 (Elbow angle) using the Law of Cosines
@@ -51,7 +43,7 @@ def inverse_kinematics(x, y, z, L1, L2, L3, L4):
     theta4 = -theta3  # Wrist should compensate for elbow rotation to keep hand alignment
 
     # Hand vertical movement (fine-tuning)
-    theta5 = 0  # This can be adjusted as needed
+    theta5 = 0
 
     # Convert angles to degrees
     theta1_deg = np.degrees(theta1)
@@ -93,38 +85,44 @@ def inverse_kinematics(x, y, z, L1, L2, L3, L4):
     }
 
 
-def is_target_reachable(x, y, z, L1, L2, L3, L4):
-    """ Checks if a target (x, y, z) is within the reachable workspace. """
-    d_horizontal = np.sqrt(x**2 + y**2)
-    d_target = np.sqrt(d_horizontal**2 + (z - L1)**2)  # Compute actual distance to target
+def plot_robot_arm(joint_positions, target_position):
+    """
+    Plots the robotic arm in 3D using Plotly.
+    """
+    x_coords, y_coords, z_coords = zip(*joint_positions)
+    print(joint_positions)
+    fig = go.Figure()
 
-    R_min = abs(L2 - (L3 + L4))  # Fully folded reach
-    R_max = L2 + L3 + L4         # Fully extended reach
+    # Plot arm movement
+    fig.add_trace(
+        go.Scatter3d(x=x_coords, y=y_coords, z=z_coords, mode='lines+markers',
+                     marker=dict(size=5, color='blue'), line=dict(width=5, color='blue'), name="Robot Arm"))
 
-    return R_min <= d_target <= R_max
+    # Annotate joints
+    labels = ["Base", "Shoulder", "Elbow", "Wrist", "Hand"]
+    for i, (x, y, z) in enumerate(joint_positions):
+        fig.add_trace(go.Scatter3d(x=[x], y=[y], z=[z], mode='text',
+                                   text=[labels[i]], textposition="top center"))
 
+    # Plot original target (green)
+    fig.add_trace(go.Scatter3d(
+        x=[target_position[0]], y=[target_position[1]], z=[target_position[2]],
+        mode='markers', marker=dict(size=8, color='green'), name="Target"
+    ))
 
-def generate_random_point(L1, L2, L3, L4, num_samples=100):
-    """ Generates a random reachable (x, y, z) target point. """
-    while True:
-        x, y, z = np.random.uniform(-L2 - L3, L2 + L3, 3)  # Generate points in a reasonable range
+    fig.update_layout(
+        title="Robotic Arm Visualization",
+        scene=dict(xaxis=dict(range=[-2, 2]), yaxis=dict(range=[-2, 2]), zaxis=dict(range=[-2, 2]))
+    )
 
-        if is_target_reachable(x, y, z, L1, L2, L3, L4):
-            return round(x,2), round(y,2), round(z,2)
+    fig.show()
+
 
 
 
 if __name__ == "__main__":
-    num_samples = 10000  # Number of points to generate
-    with open("robot_arm_database.txt", "w") as file:
-        file.write("Target (x, y, z) -> Joint Angles (theta1, theta2, theta3, theta4, theta5)\n")
+    x, y, z = map(float, input("Enter target coordinates (x, y, z): ").split(","))
 
-        for _ in range(num_samples):
-            x, y, z = generate_random_point(L1, L2, L3, L4)
-
-            result = inverse_kinematics(x, y, z, L1, L2, L3, L4)
-            if result:
-                angles = result["Joint Angles"]
-                file.write(f"[{x}, {y}, {z}] -> [{angles[0]:.2f}, {angles[1]:.2f}, {angles[2]:.2f}, {angles[3]:.2f}, {angles[4]:.2f}]\n")
-
-    print("Generated robot arm database with reachable target points and joint angles.")
+    result = inverse_kinematics(x, y, z)
+    if result:
+        plot_robot_arm(result["Joint Positions"], (x, y, z))
