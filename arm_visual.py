@@ -52,10 +52,6 @@ def inverse_kinematics(x, y, z, L1=1.0, L2=1.0, L3=1.0, L4=0.5):
     theta4_deg = np.degrees(theta4)
     theta5_deg = np.degrees(theta5)
 
-    # Save data to a file
-    with open("robot_arm_database.txt", "a") as file:
-        file.write(f"[{x}, {y}, {z}], [{theta1_deg:.2f}, {theta2_deg:.2f}, {theta3_deg:.2f}, {theta4_deg:.2f}, {theta5_deg:.2f}]\n")
-
     # Compute joint positions (adjusted for base being at the lowest point)
     joint1 = np.array([0, 0, 0])  # Base joint (now at the lowest point)
 
