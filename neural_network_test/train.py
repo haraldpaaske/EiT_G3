@@ -1,16 +1,14 @@
 import torch
 import torch.nn as nn
-from nn_test import kinematic_NN
+from neural_network_test.neural_network import kinematic_NN_2
 import pandas as pd
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
-
-
+import numpy as np
+from modules.mods import scara_forward_kinematics_2D
 
 train = 'dataset/dataset1000_train.json'
 df = pd.read_json(train)
-
-
 
 
 class DataFrameDataset(Dataset):
@@ -27,13 +25,12 @@ class DataFrameDataset(Dataset):
 
 train_set = DataFrameDataset(df)
 
+dataloader = DataLoader(train_set, batch_size=4, shuffle=True)
 
-dataloader = DataLoader(train_set, batch_size=8, shuffle=True)
 
-
-model = kinematic_NN()
-lr = 0.001
-num_epochs = 25
+model = kinematic_NN_2()
+lr = 0.0005
+num_epochs = 30
 
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -47,26 +44,34 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
         output = model(features)
         
-        loss = criterion(output, labels)
+        
+        x = output[:,0]
+        y = output[:,1]
+
+
+        out_pos = scara_forward_kinematics_2D(x, y, 1.0, 0.8, arg='train')
+
+
+        loss = criterion(out_pos, features)
         loss.backward()
         optimizer.step()
 
         running_loss+=loss.item()
         
-        
-
-        
     loss_list.append(running_loss)
         # print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss:.3f}')
         
             
-    
+torch.save(model.state_dict(), 'model_weights_big.pht')    
 
+
+
+plt.figure(figsize=(8,5))
 plt.plot(loss_list)
-plt.show()
+plt.savefig(f'loss_plot')
 
 
-torch.save(model.state_dict(), 'model_weights.pht')
+
 
 
 

@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn as nn
-from neural_network_test.nn_test_big import kinematic_NN_2
+from neural_network_test.neural_network import kinematic_NN_2
 import pandas as pd
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
