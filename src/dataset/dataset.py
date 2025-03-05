@@ -11,8 +11,8 @@ class DataFrameDataset(Dataset):
         - json_path: Path to the dataset JSON file.
         """
         dataframe = pd.read_json(json_path)
-        self.data = torch.tensor(dataframe.iloc[:, :2].values, dtype=torch.float32)  # Features (x, y)
-        self.labels = torch.tensor(dataframe.iloc[:, 2:].values, dtype=torch.float32)  # Labels (theta1, theta2)
+        self.data = torch.tensor(dataframe.iloc[:, :6].values, dtype=torch.float32)  # Features (x, y)
+        self.labels = torch.tensor(dataframe.iloc[:, 6:].values, dtype=torch.float32)  # Labels (theta1, theta2)
 
     def __len__(self):
         return len(self.data)

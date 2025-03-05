@@ -5,7 +5,7 @@ from loss.mse_loss import MSELoss
 from base import ModelDriver, ModelValidator
 import torch
 
-train_dataset = DataFrameDataset("dataset/dataset1000_train.json")
+train_dataset = DataFrameDataset("KUKA/data/dataset/dataset1000.json")
 
 # Initialize model
 model = KinematicNN()
