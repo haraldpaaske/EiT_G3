@@ -18,7 +18,7 @@ theta5_min, theta5_max =   120,  120  # Joint 5
 theta6_min, theta6_max =   -350,  350  # Joint 6
 
 #Number of points in dataset
-num_samples = 1000
+num_samples = 100
 
 theta1 = np.random.uniform(theta1_min, theta1_max, num_samples)
 theta2 = np.random.uniform(theta2_min, theta2_max, num_samples)
@@ -85,7 +85,7 @@ ax.set_zlabel(r"$Z^{B}$")
 ax.legend()
 
 # Show plot
-plt.savefig('KUKA/data/datapoints_1000_new.png')
+plt.savefig('KUKA/data/datapoints_100_new.png')
 # plt.show()
 
 
