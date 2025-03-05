@@ -8,9 +8,7 @@ import torch
 from torch import cos,sin, sqrt, atan2
 num_samples = 1
 
-α_i = [0,90,90,0,-90,-90,90,-90,0]
-d_i= [0,0.479,0.5,0.178,0,0.0557,0.536,0,0.237]
-r_i = [0.566,-0.067,0,1.3,0.489,0,0,0,0]
+
 
 theta = torch.tensor([
     [ 78.2489474053, -70.6465328702,  89.4170801733,  -335.7446323521,  120.0, -79.1094719952],
@@ -25,8 +23,11 @@ theta = torch.tensor([
 
 
 def forward_kin(theta):
+    α_i = [0,90,90,0,-90,-90,90,-90,0]
+    d_i= [0,0.479,0.5,0.178,0,0.0557,0.536,0,0.237]
+    r_i = [0.566,-0.067,0,1.3,0.489,0,0,0,0]
+
     out=[]
-    # n = theta.shape[1]
 
     α_i = [0,90,90,0,-90,-90,90,-90,0]
     α = [torch.tensor([x]) for x in α_i]
@@ -52,10 +53,11 @@ def forward_kin(theta):
         t=t[0]
         for i in range(9):
             
-            Tt = torch.Tensor([[cos(t[i]), -sin(t[i])*cos(t[i]),  sin(t[i])*sin(α[i]), r[i]*cos(t[i])],
-               [sin(t[i]),  cos(t[i])*cos(α[i]), -cos(t[i])*sin(α[i]), r[i]*sin(t[i])],
-               [    0     ,          sin(α[i])   ,           cos(α[i])  ,        d[i]        ],
-               [    0     ,            0          ,                 0     ,        torch.Tensor([1])        ]])
+            Tt = torch.Tensor([[ cos(t[i]), -sin(t[i])*cos(t[i]),  sin(t[i])*sin(α[i])  ,  r[i]*cos(t[i]) ],
+                                [sin(t[i]),  cos(t[i])*cos(α[i]), -cos(t[i])*sin(α[i]) ,  r[i]*sin(t[i])  ],
+                                [    0     ,          sin(α[i])   ,           cos(α[i]),      d[i]        ],
+                                [    0     ,            0          ,              0    , torch.Tensor([1])]
+                                ])
             
             T.append(Tt)
 
