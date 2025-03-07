@@ -32,7 +32,7 @@ class BaseLoss(ABC):
 
 
 class BaseOptimizer(ABC):
-    def __init__(self, model, lr=0.001):
+    def __init__(self, model, lr=0.01):
         self.model = model
         self.lr = lr
 
@@ -70,7 +70,6 @@ class ModelDriver:
             for features, labels in dataloader:
                 self.optimizer.zero_grad()
                 output = self.model(features)
-                
                 output = self.transform.transform_output(output)
                 
                 loss = self.loss_fn(output, labels)
