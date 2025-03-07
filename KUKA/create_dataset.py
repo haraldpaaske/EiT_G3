@@ -18,7 +18,7 @@ theta5_min, theta5_max =   120,  120  # Joint 5
 theta6_min, theta6_max =   -350,  350  # Joint 6
 
 #Number of points in dataset
-num_samples = 100
+num_samples = 10000
 
 theta1 = np.random.uniform(theta1_min, theta1_max, num_samples)
 theta2 = np.random.uniform(theta2_min, theta2_max, num_samples)
@@ -62,7 +62,7 @@ dataset_pd = dataset_pd.applymap(lambda x: float(x.evalf()) if isinstance(x, sm.
 # for col in dataset_pd.columns:
 #     print(f"{col}: {dataset_pd[col].apply(lambda x: type(x)).unique()}")
 
-dataset_pd.to_json('KUKA/data/dataset/dataset1000.json', orient='records', indent=4)
+dataset_pd.to_json('KUKA/data/dataset/dataset10000.json', orient='records', indent=4)
 
 
 #Plot dataset for visualization
