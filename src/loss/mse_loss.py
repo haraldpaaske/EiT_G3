@@ -4,7 +4,7 @@ import torch
 from torch import cos, sin, sqrt, atan2, ones_like, ones, zeros, zeros_like
 
 class MSELoss(BaseLoss):
-    def transform_output(theta):
+    def transform_output(self, theta):
         size = theta.shape[0]
         alpha = torch.Tensor([0,90,90,0,-90,-90,90,-90,0])
         d= torch.Tensor([0,0.479,0.5,0.178,0,0.0557,0.536,0,0.237])

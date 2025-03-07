@@ -70,9 +70,8 @@ class ModelDriver:
             for features, labels in dataloader:
                 self.optimizer.zero_grad()
                 output = self.model(features)
-                print(output)
+                
                 output = self.transform.transform_output(output)
-                print(output)
                 
                 loss = self.loss_fn(output, labels)
                 loss.backward()
