@@ -1,63 +1,60 @@
 from torch import nn
 from base import BaseLoss
 import torch
-from torch import cos, sin, sqrt, atan2
+from torch import cos, sin, sqrt, atan2, ones_like, ones, zeros, zeros_like
 
 class MSELoss(BaseLoss):
-    def transform_output(self, output):
-        α_i = [0,90,90,0,-90,-90,90,-90,0]
-        d_i= [0,0.479,0.5,0.178,0,0.0557,0.536,0,0.237]
-        r_i = [0.566,-0.067,0,1.3,0.489,0,0,0,0]
+    def transform_output(theta):
+        size = theta.shape[0]
+        alpha = torch.Tensor([0,90,90,0,-90,-90,90,-90,0])
+        d= torch.Tensor([0,0.479,0.5,0.178,0,0.0557,0.536,0,0.237])
+        r = torch.Tensor([0.566,-0.067,0,1.3,0.489,0,0,0,0])
 
-        out=[]
+        theta = torch.column_stack([torch.zeros(size), 
+                                torch.full((size,), 90) + theta[:,0],
+                                torch.full((size,), 90),
+                                theta[:,1],
+                                torch.full((size,), 90) + theta[:,2],
+                                torch.full((size,), -90),
+                                torch.full((size,), 90) + theta[:,3],
+                                theta[:,4],
+                                theta[:,5],
+                                ])
+        N = 9
 
-        α_i = [0,90,90,0,-90,-90,90,-90,0]
-        α = [torch.tensor([x]) for x in α_i]
-        d_i= [0,0.479,0.5,0.178,0,0.0557,0.536,0,0.237]
-        d = [torch.tensor([x]) for x in d_i]
-        r_i = [0.566,-0.067,0,1.3,0.489,0,0,0,0]
-        r = [torch.tensor([x]) for x in r_i]
-    
-        for j in range(output.shape[0]): #number of batches
-            th = output[j]               #j'th batch
+        alpha = alpha.unsqueeze(0).expand(size,-1)
+        r = r.unsqueeze(0).expand(size,-1)
+        d = d.unsqueeze(0).expand(size,-1)
+
+        T = torch.stack([
+                        torch.stack([cos(theta), -sin(theta)*cos(theta), sin(theta)*sin(alpha), r*cos(theta)]),
+                        torch.stack([sin(theta), cos(theta)*cos(alpha), -cos(theta)*sin(alpha), r*sin(theta)]),
+                        torch.stack([zeros_like(theta), sin(alpha), cos(alpha), d]),
+                        torch.stack([zeros_like(theta), zeros_like(theta), zeros_like(theta), ones_like(theta)]),
+                        ])
+
+        T = T.permute(2,0,1,3)
+
+        result = torch.eye(4).unsqueeze(-1).expand(4, 4, size).clone()
+        result = result.permute(2,0,1)
+
+        #Batch-wise matrix multiplication from T1....Tn
+        for i in range(N):
+            result = torch.bmm(result, T[...,i])
             
-            T = []
-            t1 = torch.Tensor([0])
-            t2 = torch.Tensor([90]) + th[0]
-            t3 = torch.Tensor([90])
-            t4 = th[1]
-            t5 = torch.Tensor([90]) + th[2]
-            t6 = torch.Tensor([-90])
-            t7 = torch.Tensor([90]) + th[3]
-            t8= th[4]
-            t9 = th[5]
-            t = torch.column_stack((t1, t2, t3, t4, t5, t6, t7, t8, t9))
-            t=t[0]
-            for i in range(9):
-                
-                Tt = torch.Tensor([[ cos(t[i]), -sin(t[i])*cos(t[i]),  sin(t[i])*sin(α[i])  ,  r[i]*cos(t[i]) ],
-                                    [sin(t[i]),  cos(t[i])*cos(α[i]), -cos(t[i])*sin(α[i]) ,  r[i]*sin(t[i])  ],
-                                    [    0     ,          sin(α[i])   ,           cos(α[i]),      d[i]        ],
-                                    [    0     ,            0          ,              0    , torch.Tensor([1])]
-                                    ])
-                
-                T.append(Tt)
+        R = result[:,:3,:3]
 
-            T_1_6 = T[0]@T[1]@T[2]@T[3]@T[4]@T[5]@T[6]@T[7]@T[8]
+        #Extract position and euler angles
+        x = result[:,0,3]
+        y = result[:,1,3]
+        z = result[:,2,3]
 
-            R = T_1_6[:3, :3]     #Rotation matrix from base to end effector
-            tr = T_1_6[:3, 3]      #Translation from base to end effector
+        e1 = atan2(R[:,2,1],R[:,2,2])
+        e2 = atan2(-R[:,2,0], sqrt(R[:,2,1]**2+R[:,2,2]**2))
+        e3 = atan2(R[:,1,0], R[:,0,0])
 
-            x = tr[0]
-            y = tr[1]
-            z = tr[2]
-
-            phi = atan2(R[2,1],R[2,2])
-            thh = atan2(-R[2,0], sqrt(R[2,1]**2+R[2,2]**2))
-            psi = atan2(R[1,0], R[0,0])
-            out.append(torch.Tensor([x,y,z, phi, thh, psi]))
-            
-        return torch.stack(out)
+        output = torch.stack([x,y,z,e1,e2,e3], dim=1)
+        return output
         
 
     def get_loss(self):

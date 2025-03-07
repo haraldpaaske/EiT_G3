@@ -55,7 +55,8 @@ class ModelDriver:
         """
         self.model = model
         self.optimizer = optimizer.get_optimizer()
-        self.loss_fn = loss_fn
+        self.transform = loss_fn
+        self.loss_fn = loss_fn.get_loss()
         self.batch_size = batch_size
         self.num_epochs = num_epochs
         self.loss_history = []
@@ -70,9 +71,10 @@ class ModelDriver:
                 self.optimizer.zero_grad()
                 output = self.model(features)
                 print(output)
-                output = self.loss_fn.transform_output(output)
-                loss_fn = self.loss_fn.get_loss()
-                loss = loss_fn(output, labels)
+                output = self.transform.transform_output(output)
+                print(output)
+                
+                loss = self.loss_fn(output, labels)
                 loss.backward()
                 self.optimizer.step()
 
