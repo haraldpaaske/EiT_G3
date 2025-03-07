@@ -6,6 +6,7 @@ import pandas as pd
 import sympy as sm
 import torch
 from torch import cos,sin, sqrt, atan2
+import sys
 num_samples = 1
 
 
@@ -21,20 +22,24 @@ theta = torch.tensor([
     [ -0.6076, -35.6111,  16.0049,  -7.4067,  79.8239,  -8.1022]
 ], requires_grad=True)
 
-
+# α = torch.Tensor([0,90,90,0,-90,-90,90,-90,0])
+# print(α[0:1])
+# th = theta[0]
+# print(th[0:1])
+# sys.exit()
 def forward_kin(theta):
-    α_i = [0,90,90,0,-90,-90,90,-90,0]
-    d_i= [0,0.479,0.5,0.178,0,0.0557,0.536,0,0.237]
-    r_i = [0.566,-0.067,0,1.3,0.489,0,0,0,0]
+    α = torch.Tensor([0,90,90,0,-90,-90,90,-90,0])
+    d= torch.Tensor([0,0.479,0.5,0.178,0,0.0557,0.536,0,0.237])
+    r = torch.Tensor([0.566,-0.067,0,1.3,0.489,0,0,0,0])
 
     out=[]
 
-    α_i = [0,90,90,0,-90,-90,90,-90,0]
-    α = [torch.tensor([x]) for x in α_i]
-    d_i= [0,0.479,0.5,0.178,0,0.0557,0.536,0,0.237]
-    d = [torch.tensor([x]) for x in d_i]
-    r_i = [0.566,-0.067,0,1.3,0.489,0,0,0,0]
-    r = [torch.tensor([x]) for x in r_i]
+    # α_i = [0,90,90,0,-90,-90,90,-90,0]
+    # α = [torch.tensor([x]) for x in α_i]
+    # d_i= [0,0.479,0.5,0.178,0,0.0557,0.536,0,0.237]
+    # d = [torch.tensor([x]) for x in d_i]
+    # r_i = [0.566,-0.067,0,1.3,0.489,0,0,0,0]
+    # r = [torch.tensor([x]) for x in r_i]
     
     for j in range(theta.shape[0]): #number of batches
         th = theta[j]               #j'th batch
@@ -51,18 +56,32 @@ def forward_kin(theta):
         t9 = th[5]
         t = torch.column_stack((t1, t2, t3, t4, t5, t6, t7, t8, t9))
         t=t[0]
+        print(t)
+
         for i in range(9):
-            
-            Tt = torch.Tensor([[ cos(t[i]), -sin(t[i])*cos(t[i]),  sin(t[i])*sin(α[i])  ,  r[i]*cos(t[i]) ],
+            thetaa = t[i:(i+1)]
+            T = torch.Tensor([[ cos(t[i]), -sin(t[i])*cos(t[i]),  sin(t[i])*sin(α[i])  ,  r[i]*cos(t[i]) ],
                                 [sin(t[i]),  cos(t[i])*cos(α[i]), -cos(t[i])*sin(α[i]) ,  r[i]*sin(t[i])  ],
                                 [    0     ,          sin(α[i])   ,           cos(α[i]),      d[i]        ],
                                 [    0     ,            0          ,              0    , torch.Tensor([1])]
                                 ])
+            # print(f'tl: {Tlll}')
+            # Tt = torch.stack([
+
+            #             torch.stack([torch.cos(thetaa), -torch.sin(thetaa) * torch.cos(α[i:(i+1)]),  torch.sin(thetaa) * torch.sin(α[i:i+1]),  r[i:(i+1)] * torch.cos(thetaa)]),
+            #             torch.stack([torch.sin(t[i:(i+1)]),  torch.cos(t[i:(i+1)]) * torch.cos(α[i]), -torch.cos(t[i:(i+1)]) * torch.sin(α[i]),  r[i:(i+1)] * torch.sin(thetaa)]),
+            #             torch.stack([torch.tensor([0.0]), torch.sin(α[i:(i+1)]), torch.cos(α[i:(i+1)]), d[i:(i+1)]]),
+            #             torch.stack([torch.tensor([0.0]), torch.tensor([0.0]), torch.tensor([0.0]), torch.tensor([1.0])])
+            #                         ])
+            # Tt = Tt.reshape(4,4)
             
-            T.append(Tt)
+            # print(f'Tt: {Tt}')
+            
+            
 
         T_1_6 = T[0]@T[1]@T[2]@T[3]@T[4]@T[5]@T[6]@T[7]@T[8]
 
+        print(T_1_6)
         R = T_1_6[:3, :3]     #Rotation matrix from base to end effector
         tr = T_1_6[:3, 3]      #Translation from base to end effector
 
@@ -84,3 +103,4 @@ print(test[1])
 
 
 
+#tensor([2.1473, 0.8495, 0.9375, 0.4095, 0.4514, 2.9443])
