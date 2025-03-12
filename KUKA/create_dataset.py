@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import pandas as pd
 import sympy as sm
+from sklearn.model_selection import train_test_split
+import os
 #Configurations of robotarm
 α_i = [0,90,90,0,-90,-90,90,-90,0]
 d_i= [0,0.479,0.5,0.178,0,0.0557,0.536,0,0.237]
@@ -18,7 +20,7 @@ theta5_min, theta5_max =   120,  120  # Joint 5
 theta6_min, theta6_max =   -350,  350  # Joint 6
 
 #Number of points in dataset
-num_samples = 10000
+num_samples = 30000
 
 theta1 = np.random.uniform(theta1_min, theta1_max, num_samples)
 theta2 = np.random.uniform(theta2_min, theta2_max, num_samples)
@@ -59,34 +61,41 @@ dataset_pd = pd.DataFrame(dataset, columns=['x','y','z','e1','e2', 'e3',
                                             'theta1','theta2','theta3','theta4','theta5','theta6'])
 dataset_pd = dataset_pd.applymap(lambda x: float(x.evalf()) if isinstance(x, sm.Basic) else x)
 
+train_set, val_set = train_test_split(dataset_pd, test_size=0.1, random_state=42)
+
 # for col in dataset_pd.columns:
 #     print(f"{col}: {dataset_pd[col].apply(lambda x: type(x)).unique()}")
 
-dataset_pd.to_json('KUKA/data/dataset/dataset10000.json', orient='records', indent=4)
+
+os.makedirs(f'KUKA/data/dataset/dataset{num_samples}', exist_ok=True)
+train_set.to_json(f'KUKA/data/dataset/dataset{num_samples}/train.json', orient='records', indent=4)
+val_set.to_json(f'KUKA/data/dataset/dataset{num_samples}/val.json', orient='records', indent=4)
+
+
 
 
 #Plot dataset for visualization
 #-------------------------------------------------------------------------------------------------
 
-# Create a 3D plot
-fig = plt.figure(figsize=(8, 6))
-ax = fig.add_subplot(111, projection='3d')
+# # Create a 3D plot
+# fig = plt.figure(figsize=(8, 6))
+# ax = fig.add_subplot(111, projection='3d')
 
-# Scatter plot
-ax.scatter(x_vals, y_vals, z_vals, c='b', marker='o', label="XYZ Points")
+# # Scatter plot
+# ax.scatter(x_vals, y_vals, z_vals, c='b', marker='o', label="XYZ Points")
 
-# Labels and title
-ax.set_xlabel(r"$X^{B}$")
-ax.set_ylabel(r"$Y^{B}$")
-ax.set_zlabel(r"$Z^{B}$")
-# ax.set_title("3D Plot of XYZ Coordinates")
+# # Labels and title
+# ax.set_xlabel(r"$X^{B}$")
+# ax.set_ylabel(r"$Y^{B}$")
+# ax.set_zlabel(r"$Z^{B}$")
+# # ax.set_title("3D Plot of XYZ Coordinates")
 
-# Show legend
-ax.legend()
+# # Show legend
+# ax.legend()
 
-# Show plot
-plt.savefig('KUKA/data/datapoints_100_new.png')
-# plt.show()
+# # Show plot
+# plt.savefig('KUKA/data/datapoints_100_new.png')
+# # plt.show()
 
 
 

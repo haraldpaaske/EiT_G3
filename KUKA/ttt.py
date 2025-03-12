@@ -9,7 +9,7 @@ from torch import cos,sin, sqrt, atan2, zeros_like, zeros, ones_like
 import sys
 
 theta = torch.tensor([
-    [ -2.1942,  0.8151, -1.3700,  1.6267, -0.5746,  1.6135],
+    [ 2.2469, -1.7234,  0.9442, -0.0993, -0.2786,  0.1315],
     [ 135.3567342424, -6.7004988773,34.37593541,-115.364077771,120.0,278.3080626395]
 ], requires_grad=True)
 

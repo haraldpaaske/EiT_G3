@@ -6,14 +6,14 @@ from sympy import cos, sin, sqrt, atan2
 
 
 #Define qq matrix
-theta, alpha, a, d = sm.symbols('θ α a d')
+theta, alpha, r, d = sm.symbols('θ α r d')
 
-T = sm.Matrix([[cos(theta), -sin(theta)*cos(theta),  sin(theta)*sin(alpha), a*cos(theta)],
-               [sin(theta),  cos(theta)*cos(alpha), -cos(theta)*sin(alpha), a*sin(theta)],
+T = sm.Matrix([[cos(theta), -sin(theta)*cos(theta),  sin(theta)*sin(alpha), r*cos(theta)],
+               [sin(theta),  cos(theta)*cos(alpha), -cos(theta)*sin(alpha), r*sin(theta)],
                [    0     ,          sin(alpha)   ,           cos(alpha)  ,        d        ],
                [    0     ,            0          ,                 0     ,        1        ]])
 
-params = sm.Matrix([theta, alpha, a, d])
+params = sm.Matrix([theta, alpha, r, d])
 T_i_i1 = sm.lambdify((params,), T, modules='numpy')
 
 
@@ -27,13 +27,9 @@ def forward_6dof(θ, α, r, d):
     num_samples = θ.shape[0]
     out = []
     for j in range(num_samples):
-        # print(f'j: {j}')
         theta = θ[j]
         T=[]
         for i in range(9):
-            # print(f'i: {i}')
-            # print(f'th: {theta} \n a: {α} \n r: {r} \n d: {d}')
-
             params = [theta[i], α[i], r[i], d[i]]
             T.append(T_i_i1(params))
         
