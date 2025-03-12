@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import sympy as sm
 
 class BaseModel(nn.Module, ABC):
     def __init__(self, in_dim=2, out_dim=2):
@@ -25,7 +26,7 @@ class BaseLoss(ABC):
     @abstractmethod
     def transform_output(self):
         pass
-    
+
     @abstractmethod
     def get_loss(self):
         pass
@@ -55,24 +56,25 @@ class ModelDriver:
         """
         self.model = model
         self.optimizer = optimizer.get_optimizer()
-        self.transform = loss_fn
+        self.transform = loss_fn.transform_output
         self.loss_fn = loss_fn.get_loss()
         self.batch_size = batch_size
         self.num_epochs = num_epochs
         self.loss_history = []
 
     def train(self, dataset):
-        dataloader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+        dataloader = DataLoader(
+            dataset, batch_size=self.batch_size, shuffle=True)
 
         self.model.train()
         for epoch in range(self.num_epochs):
             running_loss = 0.0
-            for features, labels in dataloader:
+            for i, (features, labels) in enumerate(dataloader):
                 self.optimizer.zero_grad()
                 output = self.model(features)
-                output = self.transform.transform_output(output)
-                
-                loss = self.loss_fn(output, labels)
+                out_pos = self.transform(output)
+
+                loss = self.loss_fn(out_pos, labels)
                 loss.backward()
                 self.optimizer.step()
 
@@ -80,12 +82,13 @@ class ModelDriver:
 
             avg_loss = running_loss / len(dataloader)
             self.loss_history.append(avg_loss)
-            print(f"Epoch [{epoch+1}/{self.num_epochs}], Loss: {avg_loss:.4f}")
+            print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss:.3f}')
 
         self._plot_loss()
 
     def evaluate(self, dataset):
-        dataloader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
+        dataloader = DataLoader(
+            dataset, batch_size=self.batch_size, shuffle=False)
         self.model.eval()
         total_loss = 0.0
 
@@ -115,126 +118,114 @@ class ModelDriver:
         plt.title("Training Loss Over Time")
         plt.show()
 
+
 class ModelValidator:
-    def __init__(self, model, dataset, batch_size=1, results_dir=f"results/"):
+    def __init__(self, model, loss_fn, dataset, batch_size=1, results_dir=f"results/"):
         """
         Initializes the model validator.
 
         Args:
         - model: Trained model instance.
+        - loss_fn: Loss function instance.
         - dataset: Dataset object (must be a PyTorch Dataset).
         - batch_size: Batch size for evaluation.
         """
         self.results_dir = f"{results_dir}{model.__class__.__name__}/"
         self.model = model
+        self.transform = loss_fn.transform_output
+        self.loss_fn = loss_fn.get_loss()
         self.batch_size = batch_size
-        self.dataloader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
+        self.dataset = dataset
+        self.dataloader = DataLoader(
+            dataset, batch_size=self.batch_size, shuffle=False)
         os.makedirs(self.results_dir, exist_ok=True)
 
     def validate(self):
-        self.model.eval()
-        t1_loss = 0
-        t2_loss = 0
+        # self.model.eval()
+        total_loss = 0.0
         total_samples = 0
+        criterion = self.loss_fn
 
         with torch.no_grad():
-            for features, labels in self.dataloader:
-                output = self.model(features)
+            for features, _ in self.dataloader:
+                outputs = self.model(features)
 
-                t1_pred, t2_pred = output[:, 0].cpu().numpy(), output[:, 1].cpu().numpy()
-                t1_true, t2_true = labels[:, 0].cpu().numpy(), labels[:, 1].cpu().numpy()
+                predicted_positions = self.transform(outputs)
 
-                t1_loss += np.sum((t1_true - t1_pred) ** 2)
-                t2_loss += np.sum((t2_true - t2_pred) ** 2)
-                total_samples += len(labels)
+                loss = criterion(predicted_positions, features[:3])
+                total_loss += loss.item() * features.size(0)
+                total_samples += features.size(0)
 
-        avg_t1_mse = t1_loss / total_samples
-        avg_t2_mse = t2_loss / total_samples
-
-        print(f"Theta 1 MSE: {avg_t1_mse:.6f}")
-        print(f"Theta 2 MSE: {avg_t2_mse:.6f}")
-
-        return avg_t1_mse, avg_t2_mse
-
-    def plot_predictions(self):
-        self.model.eval()
-        theta1_pred, theta2_pred, theta1_true, theta2_true = [], [], [], []
-
-        with torch.no_grad():
-            for features, labels in self.dataloader:
-                output = self.model(features)
-
-                theta1_pred.extend(output[:, 0].cpu().numpy())
-                theta2_pred.extend(output[:, 1].cpu().numpy())
-                theta1_true.extend(labels[:, 0].cpu().numpy())
-                theta2_true.extend(labels[:, 1].cpu().numpy())
-
-        theta1_pred, theta2_pred = np.array(theta1_pred), np.array(theta2_pred)
-        theta1_true, theta2_true = np.array(theta1_true), np.array(theta2_true)
-
-        plt.figure(figsize=(12, 5))
-
-        plt.subplot(1, 2, 1)
-        plt.scatter(theta1_true, theta1_pred, alpha=0.5, label="Theta1")
-        plt.plot([-np.pi/2, np.pi/2], [-np.pi/2, np.pi/2], 'r--')
-        plt.xlabel("True Theta1")
-        plt.ylabel("Predicted Theta1")
-        plt.title("Theta1 Predictions")
-        plt.legend()
-
-        plt.subplot(1, 2, 2)
-        plt.scatter(theta2_true, theta2_pred, alpha=0.5, label="Theta2")
-        plt.plot([-np.pi/2, np.pi/2], [-np.pi/2, np.pi/2], 'r--')
-        plt.xlabel("True Theta2")
-        plt.ylabel("Predicted Theta2")
-        plt.title("Theta2 Predictions")
-        plt.legend()
-
-        plt.tight_layout()
-        plt.show()
-
-    def plot_robot_arm_predictions(self, input_features, names, L1=1.0, L2=0.8):
+        avg_loss = total_loss / total_samples
+        print(f"Validation Loss (MSE): {avg_loss:.6f}")
+        return avg_loss
+    
+    def plot_robot_arm_predictions(self, input_features):
         """
         Plots the 2-link robot arm for each predicted theta value.
-        
+
         Args:
         - input_features: Input tensor to the model.
-        - names: List of names for the end-effector positions.
-        - L1: Length of the first link.
-        - L2: Length of the second link.
         """
         self.model.eval()
         output = self.model(input_features)
-        theta1_pred, theta2_pred = output[:, 0].detach().numpy(), output[:, 1].detach().numpy()
+        goal = tuple(input_features[:3].tolist())
+        self._plot_robot_arm(output, goal)
 
-        for theta1, theta2_relative, name in zip(theta1_pred, theta2_pred, names):
-            self._plot_robot_arm(theta1, theta2_relative, name, L1, L2)
+    def _plot_robot_arm(self, theta, goal):
+        theta = theta.detach().numpy()
+        t_s, a_s, r_s, d_s = sm.symbols('θ α a d')
 
-    def _plot_robot_arm(self, theta1, theta2_relative, name, L1=1.0, L2=0.8):
-        """
-        Plots a 2-link robot arm where the second angle is relative to the first link.
-        """
-        x0, y0 = 0, 0
-        x1 = L1 * np.cos(theta1)
-        y1 = L1 * np.sin(theta1)
-        theta2_absolute = theta1 + theta2_relative
-        x2 = x1 + L2 * np.cos(theta2_absolute)
-        y2 = y1 + L2 * np.sin(theta2_absolute)
+        T = sm.Matrix([[sm.cos(t_s), -sm.sin(t_s)*sm.cos(a_s),  sm.sin(t_s)*sm.sin(a_s), r_s*sm.cos(t_s)],
+                       [sm.sin(t_s),  sm.cos(t_s)*sm.cos(a_s), -
+                        sm.cos(t_s)*sm.sin(a_s), r_s*sm.sin(t_s)],
+                       [0,          sm.sin(a_s),
+                        sm.cos(a_s),        d_s],
+                       [0,            0,                 0,        1]])
 
-        plt.figure(figsize=(5, 5))
-        plt.plot([x0, x1], [y0, y1], 'bo-', label="Link 1")
-        plt.plot([x1, x2], [y1, y2], 'ro-', label="Link 2")
-        plt.scatter(name[0], name[1])
-        plt.scatter([x0, x1, x2], [y0, y1, y2], c='black', zorder=3)
+        params = sm.Matrix([t_s, a_s, r_s, d_s])
+        T_i_i1 = sm.lambdify((params,), T, modules='numpy')
 
-        plt.xlim(-2, 2)
-        plt.ylim(-2, 2)
-        plt.axhline(0, color='gray', linewidth=0.5)
-        plt.axvline(0, color='gray', linewidth=0.5)
-        plt.grid(True, linestyle='--', alpha=0.5)
-        plt.legend()
-        plt.title(f"2-Link Robot Arm (θ1={theta1:.1f}°, θ2_relative={theta2_relative:.1f}°)")
-        plt.xlabel("X")
-        plt.ylabel("Y")
-        plt.savefig(f"{self.results_dir}/end_effector_{name}.png")
-        plt.close()
+        # __________________________________________
+        alpha = np.array([np.radians(90),0,np.radians(-90),np.radians(90),np.radians(-90),0])
+        d= np.array([-50,-130,5.5,0,0,0,])
+        r = np.array([104.5,0,0,102.5,0,23])
+
+        theta = np.column_stack([ 
+                            180 + theta[0],
+                            90 + theta[1],
+                            theta[2],
+                            theta[3],
+                            theta[4],
+                            theta[5],
+                            ])
+
+        params = np.array([theta[0], alpha, r, d])
+        params = np.transpose(params)
+
+        points = np.array([[0, 0, 0]])
+        Tt = np.eye(4)
+        for par in params:
+            Tt = Tt @ T_i_i1(par)
+            points = np.vstack((points, Tt[:3, 3]))
+
+        # valid: 0, 1, 3, 4, 6, 7, 8
+        points = np.delete(points, [2, 5], axis=0)
+
+        X, Y, Z = points[:, 0], points[:, 1], points[:, 2]
+        X, Y, Z = X, -Y, Z
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.plot(X, Y, Z, '-o', markersize=8, label="Robot Arm")
+        ax.scatter(X[0], Y[0], Z[0], color='g', s=100, label="Base Joint")
+        ax.scatter(X[1:], Y[1:], Z[1:], color='r', s=50)
+        ax.scatter(goal[0], goal[1], goal[2], color='y', s=100)
+        # Label axes
+        ax.set_xlabel("X-axis")
+        ax.set_ylabel("Y-axis")
+        ax.set_zlabel("Z-axis")
+        ax.set_title("3D Robot Arm Visualization")
+        ax.legend()
+        plt.savefig('marius_template/test_plot/4hidden100_2e-06_transform.png')
+        plt.show()

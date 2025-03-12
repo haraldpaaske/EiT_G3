@@ -4,19 +4,21 @@ import torch.nn.functional as F
 from base import BaseModel
 
 class KinematicNN(BaseModel):
-    def __init__(self, in_dim=6, out_dim=6):
-        super(KinematicNN, self).__init__(in_dim, out_dim)
-        self.input = nn.Linear(in_features=in_dim, out_features=20)
-        self.hidden_1 = nn.Linear(in_features=20, out_features=20)
-        self.hidden_2 = nn.Linear(in_features=20, out_features=20)
-        self.output = nn.Linear(in_features=20, out_features=out_dim)
+
+    def __init__(self, neurons=100, num_layers=6, in_dim=6, out_dim=6):
+        super(KinematicNN, self).__init__()
+        self.layers = nn.ModuleList()
+        self.layers.append(nn.Linear(in_dim, neurons))
+        for _ in range(num_layers):
+            self.layers.append(nn.Linear(neurons, neurons))
+        
+        self.layers.append(nn.Linear(neurons, out_dim))
     
     def forward(self, x):
-        x = F.relu(self.input(x))
-        x = F.relu(self.hidden_1(x))
-        x = F.relu(self.hidden_2(x))
-        x = self.output(x)
-        return x
+        for layer in self.layers[:-1]:
+            x = nn.ReLU()(layer(x))
+
+        return self.layers[-1](x)
     
     def test(self, x):
         self.eval()

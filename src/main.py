@@ -5,40 +5,48 @@ from loss.mse_loss import MSELoss
 from base import ModelDriver, ModelValidator
 import torch
 
-train_dataset = DataFrameDataset("KUKA/data/dataset/dataset10000.json")
+train_dataset = DataFrameDataset("KUKA/data/dataset/dataset30000/train.json")
+
+neurons = 100
+num_layers = 10
+lr = 5e-7
+num_epochs = 5
 
 # Initialize model
-model = KinematicNN()
+model = KinematicNN(num_layers=num_layers, neurons=neurons)
 
 # Initialize optimizer and loss function
-optimizer = AdamOptimizer(model, lr=0.0001)
+optimizer = AdamOptimizer(model, lr=lr)
 loss_fn = MSELoss()
 
-# Initialize ModelDriver
-driver = ModelDriver(model, optimizer, loss_fn, batch_size=4, num_epochs=50)
+# # Initialize ModelDriver
+# driver = ModelDriver(model, optimizer, loss_fn, batch_size=4, num_epochs=num_epochs)
 
-# Train model
-driver.train(train_dataset)
+# # Train model
+# driver.train(train_dataset)
 
-# Save model
-driver.save_model("models/kinematic_nn1.pth")
+# # Save model
+# driver.save_model("models/kinematic_nn2.pth")
 
-# Evaluate model
-eval_loss = driver.evaluate(train_dataset)
+# # Evaluate model
+# eval_loss = driver.evaluate(train_dataset)
+
+imported_model = torch.load("models/kinematic_nn2.pth")
+model.load_state_dict(imported_model)
 
 # Load training dataset
-test_dataset = DataFrameDataset("dataset/dataset1000_test.json")
+test_dataset = DataFrameDataset('KUKA/data/dataset/dataset30000/val.json')
+
 
 # Initialize ModelValidator
-validator = ModelValidator(model, test_dataset)
+validator = ModelValidator(model, loss_fn, test_dataset)
 
 # Run validation
 validator.validate()
 
-# Plot predictions
-validator.plot_predictions()
-
 # Plot robot arm movement
-input_features = torch.Tensor([[-1,1.5], [1,1], [1,-1.5], [-0.5,-0.5], [0.5,0.5]])
-names = [(-1,1.5), (1,1), (1,-1.5), (-0.5,-0.5), (0.5,0.5)]
-validator.plot_robot_arm_predictions(input_features, names)
+input_features = torch.Tensor([200, 50, 100, 0, 0, 0])
+validator.plot_robot_arm_predictions(input_features)
+
+input_features = torch.Tensor([110, 120, 20, 0, 0, 0])
+validator.plot_robot_arm_predictions(input_features)

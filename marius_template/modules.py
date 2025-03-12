@@ -7,6 +7,8 @@ import sympy as sm
 import torch
 import numpy as np
 
+PI = 3.14159
+
 def transform(theta):
     r_90 = torch.pi/2
     r_180 = torch.pi
@@ -38,8 +40,9 @@ def transform(theta):
 
     T = T.permute(2,0,1,3)
 
-    result = torch.eye(4).unsqueeze(-1).expand(4, 4, size).clone()
+    result = torch.eye(4, dtype=torch.float32, device=device).unsqueeze(-1).expand(4, 4, size).clone()
     result = result.permute(2,0,1)
+
 
     #Batch-wise matrix multiplication from T1....Tn
     for i in range(N):

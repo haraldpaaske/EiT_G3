@@ -6,7 +6,7 @@ import pandas as pd
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 import os
-neurons = 100
+neurons = 10
 num_layers = 10
 lr = 5e-4
 num_epochs = 20

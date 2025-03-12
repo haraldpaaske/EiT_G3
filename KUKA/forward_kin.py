@@ -50,4 +50,3 @@ def forward_6dof(θ, α, r, d):
 
     return out
 
-
