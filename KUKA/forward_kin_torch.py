@@ -1,42 +1,20 @@
+import numpy as np
 import sympy as sm
-import torch 
-from torch import cos, sin, sqrt, atan2
-
-#Funtcion:
-'''
-in: theta: [[t11, t1, t31, t41, t51, t61], [t1n, t2n, t3n, t4n, t5n, t6n]] torch(6,N)
-out: x:    [[x,y,z,psi,phi,lambda]] torch(6,N)
-'''
-
-#Create T 
-#
+from sympy import cos, sin, sqrt, atan2
 
 
 
 
+#Define qq matrix
+theta, alpha, r, d = sm.symbols('θ α r d')
 
-def T(theta, alpha, a, d):
-    T = torch.Tensor([[cos(theta), -sin(theta)*cos(theta),  sin(theta)*sin(alpha), alpha*cos(theta)],
-               [sin(theta),  cos(theta)*cos(alpha), -cos(theta)*sin(alpha), alpha*sin(theta)],
+T = sm.Matrix([[cos(theta), -sin(theta)*cos(alpha),  sin(theta)*sin(alpha), r*cos(theta)],
+               [sin(theta),  cos(theta)*cos(alpha), -cos(theta)*sin(alpha), r*sin(theta)],
                [    0     ,          sin(alpha)   ,           cos(alpha)  ,        d        ],
                [    0     ,            0          ,                 0     ,        1        ]])
 
-
-
-
-
-    
-
-#Define qq matrix
-# theta, alpha, a, d = sm.symbols('θ α a d')
-
-# T = sm.Matrix([[cos(theta), -sin(theta)*cos(theta),  sin(theta)*sin(alpha), alpha*cos(theta)],
-#                [sin(theta),  cos(theta)*cos(alpha), -cos(theta)*sin(alpha), alpha*sin(theta)],
-#                [    0     ,          sin(alpha)   ,           cos(alpha)  ,        d        ],
-#                [    0     ,            0          ,                 0     ,        1        ]])
-
-# params = sm.Matrix([theta, alpha, a, d])
-# T_i_i1 = sm.lambdify((params,), T, modules='torch')
+params = sm.Matrix([theta, alpha, r, d])
+T_i_i1 = sm.lambdify((params,), T, modules='numpy')
 
 
 #Set parametres for the robotarm
@@ -49,19 +27,14 @@ def forward_6dof(θ, α, r, d):
     num_samples = θ.shape[0]
     out = []
     for j in range(num_samples):
-        # print(f'j: {j}')
         theta = θ[j]
         T=[]
-        for i in range(9):
+        for i in range(6):
             params = [theta[i], α[i], r[i], d[i]]
-            Tt = torch.Tensor([[cos(theta[i]), -sin(theta[i])*cos(theta[i]),  sin(theta[i])*sin(α[i]), r[i]*cos(theta[i])],
-               [sin(theta[i]),  cos(theta[i])*cos(α[i]), -cos(theta[i])*sin(α[i]), r[i]*sin(theta[i])],
-               [    0     ,          sin(α[i])   ,           cos(α[i])  ,        d[i]        ],
-               [    0     ,            0          ,                 0     ,        1        ]])
-            T.append(Tt)
+            T.append(T_i_i1(params))
+        
 
-
-        T_1_6 = T[0]@T[1]@T[2]@T[3]@T[4]@T[5]@T[6]@T[7]@T[8]
+        T_1_6 = T[0]@T[1]@T[2]@T[3]@T[4]@T[5]
 
         R = T_1_6[:3, :3]     #Rotation matrix from base to end effector
         t = T_1_6[:3, 3]      #Translation from base to end effector
@@ -73,8 +46,7 @@ def forward_6dof(θ, α, r, d):
         phi = atan2(R[2,1],R[2,2])
         theta = atan2(-R[2,0], sqrt(R[2,1]**2+R[2,2]**2))
         psi = atan2(R[1,0], R[0,0])
-        out.append(torch.Tensor([x,y,z, phi, theta, psi]))
-        
-    return torch.stack(out)
+        out.append([x,y,z, phi, theta, psi])
 
+    return out
 

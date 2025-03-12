@@ -7,6 +7,11 @@ import matplotlib.pyplot as plt
 import os
 import sympy as sm
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
+print(f"Using device: {device}")
+
 class BaseModel(nn.Module, ABC):
     def __init__(self, in_dim=2, out_dim=2):
         super(BaseModel, self).__init__()
@@ -54,7 +59,7 @@ class ModelDriver:
         - batch_size: Batch size for training.
         - num_epochs: Number of training epochs.
         """
-        self.model = model
+        self.model = model.to(device)
         self.optimizer = optimizer.get_optimizer()
         self.transform = loss_fn.transform_output
         self.loss_fn = loss_fn.get_loss()
@@ -70,6 +75,7 @@ class ModelDriver:
         for epoch in range(self.num_epochs):
             running_loss = 0.0
             for i, (features, labels) in enumerate(dataloader):
+                features, labels = features.to(device, non_blocking=True), labels.to(device, non_blocking=True)
                 self.optimizer.zero_grad()
                 output = self.model(features)
                 out_pos = self.transform(output)
@@ -94,6 +100,7 @@ class ModelDriver:
 
         with torch.no_grad():
             for features, labels in dataloader:
+                features, labels = features.to(device, non_blocking=True), labels.to(device, non_blocking=True)
                 output = self.model(features)
                 loss = self.loss_fn(output, labels)
                 total_loss += loss.item()
@@ -131,7 +138,7 @@ class ModelValidator:
         - batch_size: Batch size for evaluation.
         """
         self.results_dir = f"{results_dir}{model.__class__.__name__}/"
-        self.model = model
+        self.model = model.to(device)
         self.transform = loss_fn.transform_output
         self.loss_fn = loss_fn.get_loss()
         self.batch_size = batch_size
@@ -148,6 +155,7 @@ class ModelValidator:
 
         with torch.no_grad():
             for features, _ in self.dataloader:
+                features = features.to(device) 
                 outputs = self.model(features)
 
                 predicted_positions = self.transform(outputs)
@@ -168,12 +176,13 @@ class ModelValidator:
         - input_features: Input tensor to the model.
         """
         self.model.eval()
-        output = self.model(input_features)
+        features = input_features.to(device)
+        output = self.model(features)
         goal = tuple(input_features[:3].tolist())
         self._plot_robot_arm(output, goal)
 
     def _plot_robot_arm(self, theta, goal):
-        theta = theta.detach().numpy()
+        theta = theta.to(device).detach().cpu().numpy()
         t_s, a_s, r_s, d_s = sm.symbols('θ α a d')
 
         T = sm.Matrix([[sm.cos(t_s), -sm.sin(t_s)*sm.cos(a_s),  sm.sin(t_s)*sm.sin(a_s), r_s*sm.cos(t_s)],
@@ -192,8 +201,8 @@ class ModelValidator:
         r = np.array([104.5,0,0,102.5,0,23])
 
         theta = np.column_stack([ 
-                            180 + theta[0],
-                            90 + theta[1],
+                            np.radians(180) + theta[0],
+                            np.radians(90) + theta[1],
                             theta[2],
                             theta[3],
                             theta[4],
@@ -208,9 +217,6 @@ class ModelValidator:
         for par in params:
             Tt = Tt @ T_i_i1(par)
             points = np.vstack((points, Tt[:3, 3]))
-
-        # valid: 0, 1, 3, 4, 6, 7, 8
-        points = np.delete(points, [2, 5], axis=0)
 
         X, Y, Z = points[:, 0], points[:, 1], points[:, 2]
         X, Y, Z = X, -Y, Z

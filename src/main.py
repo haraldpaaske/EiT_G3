@@ -10,7 +10,7 @@ train_dataset = DataFrameDataset("KUKA/data/dataset/dataset30000/train.json")
 neurons = 100
 num_layers = 10
 lr = 5e-7
-num_epochs = 5
+num_epochs = 50
 
 # Initialize model
 model = KinematicNN(num_layers=num_layers, neurons=neurons)
@@ -19,20 +19,20 @@ model = KinematicNN(num_layers=num_layers, neurons=neurons)
 optimizer = AdamOptimizer(model, lr=lr)
 loss_fn = MSELoss()
 
-# # Initialize ModelDriver
-# driver = ModelDriver(model, optimizer, loss_fn, batch_size=4, num_epochs=num_epochs)
+# Initialize ModelDriver
+driver = ModelDriver(model, optimizer, loss_fn, batch_size=512, num_epochs=num_epochs)
 
-# # Train model
-# driver.train(train_dataset)
+# Train model
+driver.train(train_dataset)
 
-# # Save model
-# driver.save_model("models/kinematic_nn2.pth")
+# Save model
+driver.save_model("models/kinematic_nn2.pth")
 
-# # Evaluate model
-# eval_loss = driver.evaluate(train_dataset)
+# Evaluate model
+eval_loss = driver.evaluate(train_dataset)
 
-imported_model = torch.load("models/kinematic_nn2.pth")
-model.load_state_dict(imported_model)
+# imported_model = torch.load("models/kinematic_nn2.pth")
+# model.load_state_dict(imported_model)
 
 # Load training dataset
 test_dataset = DataFrameDataset('KUKA/data/dataset/dataset30000/val.json')
