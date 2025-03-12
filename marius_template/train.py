@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 import os
 neurons = 100
 num_layers = 10
-lr = 5e-5
-num_epochs = 10
+lr = 5e-4
+num_epochs = 20
 
 samp = '30k'
 train = 'KUKA/data/dataset/dataset30000/train.json'
@@ -30,7 +30,7 @@ criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
 # lambda1 = lambda epoch: 0.2**epoch 
-# scheduler = torch.optim.lr_scheduler.StepLR(optimizer, gamma=0.1, step_size=3)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, gamma=0.1, step_size=3)
 
 
 loss_list = []
@@ -49,7 +49,7 @@ for epoch in range(num_epochs):
         
         running_loss+=loss.item()
     print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss:.3f}')
-    # scheduler.step()
+    scheduler.step()
 
     #______VALIDATE__________
     model.eval()

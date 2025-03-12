@@ -3,7 +3,7 @@ import torch
 from modules import kin_plot, transform
 neurons = 100
 num_layers = 10
-lr = 5e-06
+lr = 5e-05
 data = '30k'
 
 model = kinematic_NN(neurons=neurons, num_layers=num_layers)
@@ -13,15 +13,14 @@ model.eval()
 
 
 
-test = torch.Tensor([-100, -50, 80, 0.8, 2, 1])
-goal_pose = tuple(test[:3].tolist())
+test = torch.Tensor([[185.4465151047, 148.2513909457, -106.8366286448, 1.592717156, 0.3575709642, -1.2239025072],
+                     [185.4465151047, 148.2513909457, -106.8366286448, 1.592717156, 0.3575709642, -1.2239025072]])
+# goal_pose = tuple(test[:3].tolist())
 
-#[-107.8429,  -75.8332,   39.3367,   -3.0498,   -0.7225,   -0.9642]
+
 
 ans = model.pred(test)
-
-
-
-kin_plot(ans, goal_pose)
+print(transform(ans))
+# kin_plot(ans, goal_pose)
 
 

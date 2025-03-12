@@ -1,5 +1,5 @@
 import torch
-from torch import cos, sin, atan2, sqrt, zeros, zeros_like, ones, ones_like, deg2rad
+from torch import cos, sin, atan2, sqrt, zeros, zeros_like, ones, ones_like, deg2rad, asin
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -55,6 +55,8 @@ def transform(theta):
     e1 = atan2(R[:,2,1],R[:,2,2])
     e2 = atan2(-R[:,2,0], sqrt(R[:,2,1]**2+R[:,2,2]**2))
     e3 = atan2(R[:,1,0], R[:,0,0])
+
+    # e2 = asin(-R[:,2,0])
 
     output = torch.stack([x,y,z,e1,e2,e3], dim=1)
     return output
@@ -125,6 +127,6 @@ def kin_plot(theta, goal):
     ax.set_zlabel("Z-axis")
     ax.set_title("3D Robot Arm Visualization")
     ax.legend()
-    plt.savefig('marius_template/test_plot/4hidden100_2e-06_transform.png')
+    plt.savefig('marius_template/test_plot/10_100_5e-06_10epochs.png')
     plt.show()
 
