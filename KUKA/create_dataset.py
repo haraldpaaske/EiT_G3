@@ -7,17 +7,32 @@ import sympy as sm
 from sklearn.model_selection import train_test_split
 import os
 #Configurations of robotarm
-α_i = [0,90,90,0,-90,-90,90,-90,0]
-d_i= [0,0.479,0.5,0.178,0,0.0557,0.536,0,0.237]
-r_i = [0.566,-0.067,0,1.3,0.489,0,0,0,0]
+α_i = [np.radians(90),
+       0,
+       np.radians(-90),
+       np.radians(90),
+       np.radians(-90),
+       0]
+d_i= [-50,
+      -130,
+      5.5,
+      0,
+      0,
+      0,]
+r_i = [104.5,
+       0,
+       0,
+       102.5,
+       0,
+       23]
 
 #Joint ranges
-theta1_min, theta1_max =   -185,  185  # Joint 1
-theta2_min, theta2_max =   -130,   20  # Joint 2
-theta3_min, theta3_max =   -100, 144  # Joint 3
-theta4_min, theta4_max =   -350,  350  # Joint 4
-theta5_min, theta5_max =   120,  120  # Joint 5
-theta6_min, theta6_max =   -350,  350  # Joint 6
+theta1_min, theta1_max =   np.radians(-185),  np.radians(185)  # Joint 1
+theta2_min, theta2_max =   np.radians(-130),   np.radians(20)  # Joint 2
+theta3_min, theta3_max =   np.radians(-100), np.radians(144)  # Joint 3
+theta4_min, theta4_max =   np.radians(-350),  np.radians(350)  # Joint 4
+theta5_min, theta5_max =   np.radians(120),  np.radians(120)  # Joint 5
+theta6_min, theta6_max =   np.radians(-350),  np.radians(350)  # Joint 6
 
 #Number of points in dataset
 num_samples = 30000
@@ -31,17 +46,14 @@ theta6 = np.random.uniform(theta6_min, theta6_max, num_samples)
 
 
 
-t1 = np.full((num_samples,), 0)
-t2 = np.full((num_samples,), 90) + theta1
-t3 = np.full((num_samples,), 90)
-t4 = theta2
-t5 = np.full((num_samples,), 90) + theta3
-t6 = np.full((num_samples,), -90)
-t7 = np.full((num_samples,), 90) + theta4
-t8= theta5
-t9 = theta6
+t1 = np.full((num_samples,), np.radians(180)) + theta1
+t2 = np.full((num_samples,), np.radians(90)) + theta2
+t3 = theta3
+t4 = theta4
+t5 = theta5
+t6 = theta6
 
-t = np.column_stack((t1, t2, t3, t4, t5, t6, t7, t8, t9))
+t = np.column_stack((t1, t2, t3, t4, t5, t6))
 data_points = forward_6dof(t, α_i, r_i, d_i)
 
 

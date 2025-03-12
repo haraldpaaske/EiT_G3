@@ -8,10 +8,10 @@ import matplotlib.pyplot as plt
 import os
 neurons = 100
 num_layers = 10
-lr = 5e-7
-num_epochs = 50
+lr = 5e-6
+num_epochs = 20
 
-
+samp = '30k'
 train = 'KUKA/data/dataset/dataset30000/train.json'
 val = 'KUKA/data/dataset/dataset30000/val.json'
 train_df = pd.read_json(train)
@@ -30,7 +30,7 @@ criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
 # lambda1 = lambda epoch: 0.2**epoch 
-# scheduler = torch.optim.lr_scheduler.StepLR(optimizer, gamma=0.8, step_size=5)
+# scheduler = torch.optim.lr_scheduler.StepLR(optimizer, gamma=0.1, step_size=3)
 
 
 loss_list = []
@@ -68,9 +68,7 @@ for epoch in range(num_epochs):
     loss_list.append(running_loss)
     
 os.makedirs(f'marius_template/models/{num_layers}_{neurons}', exist_ok=True)          
-torch.save(model.state_dict(), f'marius_template/models/{num_layers}_{neurons}/{lr}.pht')    
-
-
+torch.save(model.state_dict(), f'marius_template/models/{num_layers}_{neurons}/{lr}_{samp}.pht')    
 
 
 
@@ -87,6 +85,6 @@ plt.tight_layout()
 
 # Save the combined figure
 os.makedirs(f'marius_template/loss/{num_layers}_{neurons}', exist_ok=True)
-plt.savefig(f'marius_template/loss/{num_layers}_{neurons}/{lr}')
+plt.savefig(f'marius_template/loss/{num_layers}_{neurons}/{lr}_{samp}')
 
 

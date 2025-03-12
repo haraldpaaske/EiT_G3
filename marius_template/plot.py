@@ -11,14 +11,14 @@ def kin_plot(theta, goal):
     theta = theta.detach().numpy()
     t_s, a_s, r_s, d_s = sm.symbols('θ α a d')
 
-    T = sm.Matrix([[cos(t_s), -sin(t_s)*cos(t_s),  sin(t_s)*sin(a_s), r_s*cos(t_s)],
+    T = sm.Matrix([[cos(t_s), -sin(t_s)*cos(a_s),  sin(t_s)*sin(a_s), r_s*cos(t_s)],
                [sin(t_s),  cos(t_s)*cos(a_s), -cos(t_s)*sin(a_s), r_s*sin(t_s)],
                [    0     ,          sin(a_s)   ,           cos(a_s)  ,        d_s        ],
                [    0     ,            0          ,                 0     ,        1        ]])
 
     params = sm.Matrix([t_s, a_s, r_s, d_s])
     T_i_i1 = sm.lambdify((params,), T, modules='numpy')
-
+    
     #__________________________________________
     alpha = np.array([0,90,90,0,-90,-90,90,-90,0])
     d= np.array([0,0.479,0.5,0.178,0,0.0557,0.536,0,0.237])

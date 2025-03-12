@@ -75,9 +75,7 @@ def forward_kin(theta):
             #                         ])
             # Tt = Tt.reshape(4,4)
             
-            # print(f'Tt: {Tt}')
-            
-            
+            # print(f'Tt: {Tt}')  
 
         T_1_6 = T[0]@T[1]@T[2]@T[3]@T[4]@T[5]@T[6]@T[7]@T[8]
 

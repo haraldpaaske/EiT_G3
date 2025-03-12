@@ -1,5 +1,5 @@
 import torch
-from torch import cos, sin, atan2, sqrt, zeros, zeros_like, ones, ones_like
+from torch import cos, sin, atan2, sqrt, zeros, zeros_like, ones, ones_like, deg2rad
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -8,22 +8,22 @@ import torch
 import numpy as np
 
 def transform(theta):
+    r_90 = torch.pi/2
+    r_180 = torch.pi
     size = theta.shape[0]
-    alpha = torch.Tensor([0,90,90,0,-90,-90,90,-90,0])
-    d= torch.Tensor([0,0.479,0.5,0.178,0,0.0557,0.536,0,0.237])
-    r = torch.Tensor([0.566,-0.067,0,1.3,0.489,0,0,0,0])
+    alpha = torch.Tensor([r_90,0,-r_90,r_90,-r_90,0])
+    d= torch.Tensor([-50, -130, 5.5, 0, 0, 0])
+    r = torch.Tensor([104.5, 0, 0, 102.5, 0, 23])
 
-    theta = torch.column_stack([torch.zeros(size), 
-                            torch.full((size,), 90) + theta[:,0],
-                            torch.full((size,), 90),
-                            theta[:,1],
-                            torch.full((size,), 90) + theta[:,2],
-                            torch.full((size,), -90),
-                            torch.full((size,), 90) + theta[:,3],
+    theta = torch.column_stack([ 
+                            torch.full((size,), r_180) + theta[:,0],
+                            torch.full((size,), r_90) + theta[:,1],
+                            theta[:,2],
+                            theta[:,3],
                             theta[:,4],
                             theta[:,5],
                             ])
-    N = 9
+    N = 6
 
     alpha = alpha.unsqueeze(0).expand(size,-1)
     r = r.unsqueeze(0).expand(size,-1)
@@ -44,7 +44,7 @@ def transform(theta):
     #Batch-wise matrix multiplication from T1....Tn
     for i in range(N):
         result = torch.bmm(result, T[...,i])
-        
+
     R = result[:,:3,:3]
 
     #Extract position and euler angles
@@ -85,19 +85,16 @@ def kin_plot(theta, goal):
     T_i_i1 = sm.lambdify((params,), T, modules='numpy')
 
     #__________________________________________
-    alpha = np.array([0,90,90,0,-90,-90,90,-90,0])
-    d= np.array([0,0.479,0.5,0.178,0,0.0557,0.536,0,0.237])
-    r = np.array([0.566,-0.067,0,1.3,0.489,0,0,0,0])
+    alpha = np.array([np.radians(90),0,np.radians(-90),np.radians(90),np.radians(-90),0])
+    d= np.array([-50,-130,5.5,0,0,0,])
+    r = np.array([104.5,0,0,102.5,0,23])
 
 
-    theta = np.column_stack([
-                            0, 
-                            90 + theta[0],
-                            90,
-                            theta[1],
-                            90 + theta[2],
-                            -90,
-                            90 + theta[3],
+    theta = np.column_stack([ 
+                            180 + theta[0],
+                            90 + theta[1],
+                            theta[2],
+                            theta[3],
                             theta[4],
                             theta[5],
                             ])
@@ -113,7 +110,7 @@ def kin_plot(theta, goal):
         points = np.vstack((points, Tt[:3,3]))
 
     #valid: 0, 1, 3, 4, 6, 7, 8
-    points = np.delete(points, [2,5], axis=0)
+    # points = np.delete(points, [2,5], axis=0)
 
     X, Y, Z = points[:,0], points[:,1], points[:,2]
 
