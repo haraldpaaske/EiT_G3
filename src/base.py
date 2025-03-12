@@ -186,11 +186,9 @@ class ModelValidator:
         t_s, a_s, r_s, d_s = sm.symbols('θ α a d')
 
         T = sm.Matrix([[sm.cos(t_s), -sm.sin(t_s)*sm.cos(a_s),  sm.sin(t_s)*sm.sin(a_s), r_s*sm.cos(t_s)],
-                       [sm.sin(t_s),  sm.cos(t_s)*sm.cos(a_s), -
-                        sm.cos(t_s)*sm.sin(a_s), r_s*sm.sin(t_s)],
-                       [0,          sm.sin(a_s),
-                        sm.cos(a_s),        d_s],
-                       [0,            0,                 0,        1]])
+                [sm.sin(t_s),  sm.cos(t_s)*sm.cos(a_s), -sm.cos(t_s)*sm.sin(a_s), r_s*sm.sin(t_s)],
+                [    0     ,          sm.sin(a_s)   ,           sm.cos(a_s)  ,        d_s        ],
+                [    0     ,            0          ,                 0     ,        1        ]])
 
         params = sm.Matrix([t_s, a_s, r_s, d_s])
         T_i_i1 = sm.lambdify((params,), T, modules='numpy')
@@ -200,38 +198,40 @@ class ModelValidator:
         d= np.array([-50,-130,5.5,0,0,0,])
         r = np.array([104.5,0,0,102.5,0,23])
 
+
         theta = np.column_stack([ 
-                            np.radians(180) + theta[0],
-                            np.radians(90) + theta[1],
-                            theta[2],
-                            theta[3],
-                            theta[4],
-                            theta[5],
-                            ])
+                                np.radians(180) + theta[0],
+                                np.radians(90) + theta[1],
+                                theta[2],
+                                theta[3],
+                                theta[4],
+                                theta[5],
+                                ])
 
-        params = np.array([theta[0], alpha, r, d])
-        params = np.transpose(params)
+        param = np.array([theta[0], alpha, r, d])
+        param= np.transpose(param)
+        print(param)
 
-        points = np.array([[0, 0, 0]])
+        points = np.array([[0,0,0]])
         Tt = np.eye(4)
-        for par in params:
+        for par in param:
             Tt = Tt @ T_i_i1(par)
-            points = np.vstack((points, Tt[:3, 3]))
+            points = np.vstack((points, Tt[:3,3]))
 
-        X, Y, Z = points[:, 0], points[:, 1], points[:, 2]
-        X, Y, Z = X, -Y, Z
+
+        X, Y, Z = points[:,0], points[:,1], points[:,2]
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         ax.plot(X, Y, Z, '-o', markersize=8, label="Robot Arm")
         ax.scatter(X[0], Y[0], Z[0], color='g', s=100, label="Base Joint")
         ax.scatter(X[1:], Y[1:], Z[1:], color='r', s=50)
-        ax.scatter(goal[0], goal[1], goal[2], color='y', s=100)
+        ax.scatter(goal[0], goal[1], goal[2], color='y', s=100, label="Goal")
         # Label axes
         ax.set_xlabel("X-axis")
         ax.set_ylabel("Y-axis")
         ax.set_zlabel("Z-axis")
         ax.set_title("3D Robot Arm Visualization")
         ax.legend()
-        plt.savefig('marius_template/test_plot/4hidden100_2e-06_transform.png')
+        plt.savefig('marius_template/test_plot/testing.png')
         plt.show()

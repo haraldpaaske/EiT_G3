@@ -13,13 +13,13 @@ def transform(theta):
     r_90 = torch.pi/2
     r_180 = torch.pi
     size = theta.shape[0]
-    alpha = torch.Tensor([r_90,0,-r_90,r_90,-r_90,0])
-    d= torch.Tensor([-50, -130, 5.5, 0, 0, 0])
-    r = torch.Tensor([104.5, 0, 0, 102.5, 0, 23])
+    alpha = torch.tensor([r_90,0,-r_90,r_90,-r_90,0], device=theta.device)
+    d= torch.tensor([-50, -130, 5.5, 0, 0, 0], device=theta.device)
+    r = torch.tensor([104.5, 0, 0, 102.5, 0, 23], device=theta.device)
 
     theta = torch.column_stack([ 
-                            torch.full((size,), r_180) + theta[:,0],
-                            torch.full((size,), r_90) + theta[:,1],
+                            torch.full((size,), r_180, device=theta.device) + theta[:, 0],
+                            torch.full((size,), r_90, device=theta.device) + theta[:,1],
                             theta[:,2],
                             theta[:,3],
                             theta[:,4],
@@ -40,7 +40,8 @@ def transform(theta):
 
     T = T.permute(2,0,1,3)
 
-    result = torch.eye(4, dtype=torch.float32, device=device).unsqueeze(-1).expand(4, 4, size).clone()
+    result = torch.eye(
+        4, dtype=torch.float32, device=theta.device).unsqueeze(-1).expand(4, 4, size).clone()
     result = result.permute(2,0,1)
 
 

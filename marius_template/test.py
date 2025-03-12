@@ -3,12 +3,12 @@ import torch
 from modules import kin_plot, transform
 neurons = 100
 num_layers = 10
-lr = 5e-05
+lr = 5e-4
 data = '30k'
 
 model = kinematic_NN(neurons=neurons, num_layers=num_layers)
 
-model.load_state_dict(torch.load(f'marius_template/models/{num_layers}_{neurons}/{lr}_{data}_new.pht'))
+model.load_state_dict(torch.load(f'marius_template/models/{num_layers}_{neurons}/{lr}_{data}.pht'))
 model.eval()
 
 
