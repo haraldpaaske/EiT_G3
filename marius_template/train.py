@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 import os
 neurons = 100
 num_layers = 10
-lr = 5e-6
-num_epochs = 20
+lr = 5e-5
+num_epochs = 10
 
 samp = '30k'
 train = 'KUKA/data/dataset/dataset30000/train.json'

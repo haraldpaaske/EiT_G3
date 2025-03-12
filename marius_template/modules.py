@@ -91,26 +91,26 @@ def kin_plot(theta, goal):
 
 
     theta = np.column_stack([ 
-                            180 + theta[0],
-                            90 + theta[1],
+                            np.radians(180) + theta[0],
+                            np.radians(90) + theta[1],
                             theta[2],
                             theta[3],
                             theta[4],
                             theta[5],
                             ])
 
+    
 
-    params = np.array([theta[0], alpha, r, d])
-    params=np.transpose(params)
+    param = np.array([theta[0], alpha, r, d])
+    param= np.transpose(param)
+    print(param)
 
     points = np.array([[0,0,0]])
     Tt = np.eye(4)
-    for par in params:
+    for par in param:
         Tt = Tt @ T_i_i1(par)
         points = np.vstack((points, Tt[:3,3]))
 
-    #valid: 0, 1, 3, 4, 6, 7, 8
-    # points = np.delete(points, [2,5], axis=0)
 
     X, Y, Z = points[:,0], points[:,1], points[:,2]
 
