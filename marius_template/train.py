@@ -6,10 +6,10 @@ import pandas as pd
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 import os
-neurons = 10
-num_layers = 10
+neurons = 400
+num_layers = 6
 lr = 5e-4
-num_epochs = 10
+num_epochs = 20
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.backends.cuda.matmul.allow_tf32 = True
@@ -17,8 +17,8 @@ torch.backends.cudnn.allow_tf32 = True
 print(f"Using device: {device}")
 
 samp = '30k'
-train = 'KUKA/data/dataset/dataset30000/train.json'
-val = 'KUKA/data/dataset/dataset30000/val.json'
+train = 'KUKA/data/dataset/dataset100000/train.json'
+val = 'KUKA/data/dataset/dataset100000/val.json'
 train_df = pd.read_json(train)
 val_df = pd.read_json(val)
 
@@ -26,7 +26,7 @@ train_set = DataFrameDataset(train_df)
 val_set = DataFrameDataset(val_df)
 
 
-dataloader = DataLoader(train_set, batch_size=64, shuffle=True)
+dataloader = DataLoader(train_set, batch_size=32, shuffle=True)
 valloader = DataLoader(val_set, batch_size=1)
 
 model = kinematic_NN(num_layers=num_layers, neurons=neurons)
@@ -36,7 +36,7 @@ criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
 # lambda1 = lambda epoch: 0.2**epoch 
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer, gamma=0.1, step_size=3)
+scheduler = torch.optim.lr_scheduler.StepLR(optimizer, gamma=0.5, step_size=5)
 
 
 loss_list = []

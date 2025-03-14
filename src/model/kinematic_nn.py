@@ -24,3 +24,69 @@ class KinematicNN(BaseModel):
         self.eval()
         with torch.no_grad():
             return self.forward(x)
+
+
+class BNKinematicNN(BaseModel):
+    """
+    Example: MLP with batch normalization
+    """
+    def __init__(self, neurons=100, num_layers=6, in_dim=6, out_dim=6):
+        super().__init__(in_dim, out_dim)
+
+        layers = []
+        # Input
+        layers.append(nn.Linear(in_dim, neurons))
+        layers.append(nn.BatchNorm1d(neurons))
+        layers.append(nn.ReLU())
+
+        # Hidden
+        for _ in range(num_layers - 1):
+            layers.append(nn.Linear(neurons, neurons))
+            layers.append(nn.BatchNorm1d(neurons))
+            layers.append(nn.ReLU())
+
+        # Output
+        layers.append(nn.Linear(neurons, out_dim))
+
+        self.net = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return self.net(x)
+
+    def test(self, x):
+        self.eval()
+        with torch.no_grad():
+            return self.forward(x)
+
+
+class LNKinematicNN(BaseModel):
+    """
+    Example: MLP with layer normalization
+    """
+    def __init__(self, neurons=100, num_layers=6, in_dim=6, out_dim=6):
+        super().__init__(in_dim, out_dim)
+
+        layers = []
+        # Input
+        layers.append(nn.Linear(in_dim, neurons))
+        layers.append(nn.LayerNorm(neurons))
+        layers.append(nn.ReLU())
+
+        # Hidden
+        for _ in range(num_layers - 1):
+            layers.append(nn.Linear(neurons, neurons))
+            layers.append(nn.LayerNorm(neurons))
+            layers.append(nn.ReLU())
+
+        # Output
+        layers.append(nn.Linear(neurons, out_dim))
+
+        self.net = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return self.net(x)
+
+    def test(self, x):
+        self.eval()
+        with torch.no_grad():
+            return self.forward(x)

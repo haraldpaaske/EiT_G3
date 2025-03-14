@@ -70,6 +70,7 @@ class ModelDriver:
     def train(self, dataset):
         dataloader = DataLoader(
             dataset, batch_size=self.batch_size, shuffle=True)
+        scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, gamma=0.1, step_size=3)
 
         self.model.train()
         for epoch in range(self.num_epochs):
@@ -80,12 +81,13 @@ class ModelDriver:
                 output = self.model(features)
                 out_pos = self.transform(output)
 
-                loss = self.loss_fn(out_pos, labels)
+                loss = self.loss_fn(out_pos, features)
                 loss.backward()
                 self.optimizer.step()
 
                 running_loss += loss.item()
 
+            scheduler.step()
             avg_loss = running_loss / len(dataloader)
             self.loss_history.append(avg_loss)
             print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss:.3f}')
@@ -153,6 +155,7 @@ class ModelValidator:
         total_samples = 0
         criterion = self.loss_fn
 
+        l2 = []
         with torch.no_grad():
             for features, _ in self.dataloader:
                 features = features.to(device) 
@@ -160,10 +163,13 @@ class ModelValidator:
 
                 predicted_positions = self.transform(outputs)
 
-                loss = criterion(predicted_positions, features[:3])
+                l2_norm = torch.norm(features - predicted_positions, p=2)
+                l2.append(l2_norm)
+                loss = criterion(predicted_positions, features)
                 total_loss += loss.item() * features.size(0)
                 total_samples += features.size(0)
-
+        score = sum(l2)/len(l2)
+        print(f'L2-score: {score:.3f}')
         avg_loss = total_loss / total_samples
         print(f"Validation Loss (MSE): {avg_loss:.6f}")
         return avg_loss
@@ -210,7 +216,6 @@ class ModelValidator:
 
         param = np.array([theta[0], alpha, r, d])
         param= np.transpose(param)
-        print(param)
 
         points = np.array([[0,0,0]])
         Tt = np.eye(4)
@@ -220,12 +225,14 @@ class ModelValidator:
 
 
         X, Y, Z = points[:,0], points[:,1], points[:,2]
+        print(X[5], Y[5], Z[5])
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         ax.plot(X, Y, Z, '-o', markersize=8, label="Robot Arm")
         ax.scatter(X[0], Y[0], Z[0], color='g', s=100, label="Base Joint")
-        ax.scatter(X[1:], Y[1:], Z[1:], color='r', s=50)
+        ax.scatter(X[1:5], Y[1:5], Z[1:5], color='r', s=50)
+        ax.scatter(X[5], Y[5], Z[5], color='hotpink', s=100, label="End Effector")
         ax.scatter(goal[0], goal[1], goal[2], color='y', s=100, label="Goal")
         # Label axes
         ax.set_xlabel("X-axis")

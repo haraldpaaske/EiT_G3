@@ -1,42 +1,48 @@
 from dataset.dataset import DataFrameDataset
-from model.kinematic_nn import KinematicNN
+from model.multihead_nn import MultiHeadKinematicNN
+from model.kinematic_nn import KinematicNN, BNKinematicNN, LNKinematicNN
+from model.residual_nn import ResidualKinematicNN
 from optimizer.adam_optimizer import AdamOptimizer
 from loss.mse_loss import MSELoss
 from base import ModelDriver, ModelValidator
 import torch
 
-train_dataset = DataFrameDataset("KUKA/data/dataset/dataset30000/train.json")
+train_dataset = DataFrameDataset("KUKA/data/dataset/dataset100000/train.json")
 
-neurons = 100
-num_layers = 10
+neurons = 512
+num_layers = 8
 lr = 5e-4
 num_epochs = 50
-batch_size = 32
+batch_size = 64
 
 # Initialize model
-model = KinematicNN(num_layers=num_layers, neurons=neurons)
+# model = KinematicNN(num_layers=num_layers, neurons=neurons)
+# model = ResidualKinematicNN(num_blocks=6, neurons=neurons)
+# model = BNKinematicNN(num_layers=num_layers, neurons=neurons)
+# model = LNKinematicNN(num_layers=num_layers, neurons=neurons)
+model = MultiHeadKinematicNN(num_layers=num_layers, neurons=neurons)
 
 # Initialize optimizer and loss function
 optimizer = AdamOptimizer(model, lr=lr)
 loss_fn = MSELoss()
 
 # Initialize ModelDriver
-# driver = ModelDriver(model, optimizer, loss_fn, batch_size=batch_size, num_epochs=num_epochs)
+driver = ModelDriver(model, optimizer, loss_fn, batch_size=batch_size, num_epochs=num_epochs)
 
-# # Train model
-# driver.train(train_dataset)
+# Train model
+driver.train(train_dataset)
 
-# # Save model
-# driver.save_model("models/kinematic_nn2.pth")
+# Save model
+driver.save_model(f"models/{model.__class__.__name__}.pth")
 
-# # Evaluate model
-# eval_loss = driver.evaluate(train_dataset)
+# Evaluate model
+eval_loss = driver.evaluate(train_dataset)
 
-imported_model = torch.load("models/kinematic_nn2.pth")
-model.load_state_dict(imported_model)
+# imported_model = torch.load(f"models/{model.__class__.__name__}.pth")
+# model.load_state_dict(imported_model)
 
 # Load training dataset
-test_dataset = DataFrameDataset('KUKA/data/dataset/dataset30000/val.json')
+test_dataset = DataFrameDataset('KUKA/data/dataset/dataset100000/val.json')
 
 
 # Initialize ModelValidator

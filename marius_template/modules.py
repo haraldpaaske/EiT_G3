@@ -7,8 +7,6 @@ import sympy as sm
 import torch
 import numpy as np
 
-PI = 3.14159
-
 def transform(theta):
     r_90 = torch.pi/2
     r_180 = torch.pi
