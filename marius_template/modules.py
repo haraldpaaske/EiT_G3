@@ -7,6 +7,7 @@ import sympy as sm
 import torch
 import numpy as np
 
+
 def transform(theta):
     r_90 = torch.pi/2
     r_180 = torch.pi
@@ -74,7 +75,7 @@ class DataFrameDataset(Dataset):
         return self.data[index], self.labels[index]
     
 
-def kin_plot(theta, goal):
+def kin_plot(theta, goal, name):
     theta = theta.detach().numpy()
     t_s, a_s, r_s, d_s = sm.symbols('θ α a d')
 
@@ -91,7 +92,6 @@ def kin_plot(theta, goal):
     d= np.array([-50,-130,5.5,0,0,0,])
     r = np.array([104.5,0,0,102.5,0,23])
 
-
     theta = np.column_stack([ 
                             np.radians(180) + theta[0],
                             np.radians(90) + theta[1],
@@ -100,8 +100,6 @@ def kin_plot(theta, goal):
                             theta[4],
                             theta[5],
                             ])
-
-    
 
     param = np.array([theta[0], alpha, r, d])
     param= np.transpose(param)
@@ -127,6 +125,7 @@ def kin_plot(theta, goal):
     ax.set_zlabel("Z-axis")
     ax.set_title("3D Robot Arm Visualization")
     ax.legend()
-    plt.savefig('marius_template/test_plot/10_100_5e-06_10epochs.png')
+    
+    plt.savefig(f'{name}.png')
     plt.show()
 
