@@ -78,7 +78,7 @@ class DataFrameDataset(Dataset):
     
 
 def kin_plot(theta, goal, name):
-    theta = theta.detach().numpy()
+    theta = theta.cpu().detach().numpy()
     t_s, a_s, r_s, d_s = sm.symbols('θ α a d')
 
     T = sm.Matrix([[sm.cos(t_s), -sm.sin(t_s)*sm.cos(a_s),  sm.sin(t_s)*sm.sin(a_s), r_s*sm.cos(t_s)],
