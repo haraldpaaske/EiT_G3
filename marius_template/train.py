@@ -24,6 +24,11 @@ val = 'KUKA/data/dataset/dataset30000/val.json'
 train_df = pd.read_json(train)
 val_df = pd.read_json(val)
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
+print(f"Using device: {device}")
+
 #______NORMALIZER_________
 
 scaler = MinMaxScaler(feature_range=(-1,1))
@@ -44,6 +49,7 @@ dataloader = DataLoader(train_set, batch_size=4, shuffle=True)
 valloader = DataLoader(val_set, batch_size=1)
 
 model = kinematic_NN(num_layers=num_layers, neurons=neurons)
+model = model.to(device)
 
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -60,6 +66,7 @@ for epoch in range(num_epochs):
     running_loss = 0
     for i, batch in enumerate(dataloader):
         features, labels = batch
+        features, labels = features.to(device, non_blocking=True), labels.to(device, non_blocking=True)
         optimizer.zero_grad()
         output = model(features)
         if normalize:
@@ -80,7 +87,8 @@ for epoch in range(num_epochs):
     model.eval()
     with torch.no_grad():
         l2 = []
-        for features, _ in valloader:     
+        for features, _ in valloader:
+            features = features.to(device, non_blocking=True)     
             output = model(features)
             if normalize:
                 output = de_normalize(output)
