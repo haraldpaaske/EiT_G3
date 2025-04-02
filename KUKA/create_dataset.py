@@ -6,6 +6,7 @@ import pandas as pd
 import sympy as sm
 from sklearn.model_selection import train_test_split
 import os
+from sklearn.preprocessing import MinMaxScaler
 #Configurations of robotarm
 α_i = [np.radians(90),
        0,
@@ -31,7 +32,7 @@ theta1_min, theta1_max =   np.radians(-185),  np.radians(185)  # Joint 1
 theta2_min, theta2_max =   np.radians(-130),   np.radians(20)  # Joint 2
 theta3_min, theta3_max =   np.radians(-100), np.radians(144)  # Joint 3
 theta4_min, theta4_max =   np.radians(-350),  np.radians(350)  # Joint 4
-theta5_min, theta5_max =   np.radians(120),  np.radians(120)  # Joint 5
+theta5_min, theta5_max =   np.radians(-120),  np.radians(120)  # Joint 5
 theta6_min, theta6_max =   np.radians(-350),  np.radians(350)  # Joint 6
 
 #Number of points in dataset
@@ -72,6 +73,9 @@ dataset = np.array([x_vals, y_vals, z_vals, e1, e2, e3,
 dataset_pd = pd.DataFrame(dataset, columns=['x','y','z','e1','e2', 'e3',
                                             'theta1','theta2','theta3','theta4','theta5','theta6'])
 dataset_pd = dataset_pd.applymap(lambda x: float(x.evalf()) if isinstance(x, sm.Basic) else x)
+
+# scaler = MinMaxScaler(feature_range=(-1,1))
+
 
 train_set, val_set = train_test_split(dataset_pd, test_size=0.1, random_state=42)
 

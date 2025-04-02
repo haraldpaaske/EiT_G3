@@ -9,7 +9,7 @@ class KinematicNN(nn.Module):
         self.hidden_1 = nn.Linear(in_features=20, out_features=20)
         self.hidden_2 = nn.Linear(in_features=20, out_features=20)
         self.output = nn.Linear(in_features=20, out_features=out_dim)
-    
+        
     def forward(self, x):
         x = F.relu(self.input(x))
         x = F.relu(self.hidden_1(x))
