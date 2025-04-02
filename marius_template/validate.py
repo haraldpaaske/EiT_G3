@@ -7,6 +7,6 @@ from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 
 model = kinematic_NN()
-model.eval()
-with torch.nograd:
-    
+
+
+

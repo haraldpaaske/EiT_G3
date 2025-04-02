@@ -10,12 +10,13 @@ from sklearn.preprocessing import MinMaxScaler
 
 neurons = 100
 num_layers = 10
-lr = 9e-4
-num_epochs = 10
-normalize = True
+lr = 5e-4
+num_epochs = 30
+normalize = False
 sched = True
+cos_dec = False
 gamma = 0.1
-step_size = 3
+step_size = 5
 
 
 samp = '30k'
@@ -52,6 +53,8 @@ optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 if sched:
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, gamma=gamma, step_size=step_size)
 
+elif cos_dec:
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=lr*0.001)
 
 loss_list = []
 val_list = []
@@ -96,7 +99,7 @@ for epoch in range(num_epochs):
     loss_list.append(running_loss)
     
 os.makedirs(f'marius_template/models/{num_layers}_{neurons}', exist_ok=True)          
-torch.save(model.state_dict(), f'marius_template/models/{num_layers}_{neurons}/{lr}_{samp}_SLR_01_5_norm.pht')    
+torch.save(model.state_dict(), f'marius_template/models/{num_layers}_{neurons}/{lr}_{samp}_{gamma}_{step_size}.pht')    
 
 
 
@@ -113,6 +116,6 @@ plt.tight_layout()
 
 # Save the combined figure
 os.makedirs(f'marius_template/loss/{num_layers}_{neurons}', exist_ok=True)
-plt.savefig(f'marius_template/loss/{num_layers}_{neurons}/{lr}_{samp}_norm.png')
+plt.savefig(f'marius_template/loss/{num_layers}_{neurons}/{lr}_{samp}_{gamma}_{step_size}.png')
 
 

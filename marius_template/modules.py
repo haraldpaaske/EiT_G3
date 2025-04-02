@@ -6,6 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import sympy as sm
 import torch
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 
 def transform(theta):
@@ -76,6 +77,9 @@ class DataFrameDataset(Dataset):
     
 
 def kin_plot(theta, goal, name):
+    pos = goal[:3]
+    ori = goal[3:]
+
     theta = theta.detach().numpy()
     t_s, a_s, r_s, d_s = sm.symbols('θ α a d')
 
@@ -103,7 +107,7 @@ def kin_plot(theta, goal, name):
 
     param = np.array([theta[0], alpha, r, d])
     param= np.transpose(param)
-    print(param)
+    
 
     points = np.array([[0,0,0]])
     Tt = np.eye(4)
@@ -111,14 +115,23 @@ def kin_plot(theta, goal, name):
         Tt = Tt @ T_i_i1(par)
         points = np.vstack((points, Tt[:3,3]))
 
-
+    
     X, Y, Z = points[:,0], points[:,1], points[:,2]
+
+    rotation = R.from_euler('xyz', ori, degrees=False)
+    rotation_matrix =rotation.as_matrix()
+    reference = np.array([0,0,1])
+    orientation =rotation_matrix@reference
+    rob_ori = Tt[:3,:3]@reference
+    print(ori)
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.plot(X, Y, Z, '-o', markersize=8, label="Robot Arm")
     ax.scatter(X, Y, Z, color='r', s=50)  # Mark joints
-    ax.scatter(goal[0], goal[1], goal[2], color='y', s=100)
+    ax.scatter(pos[0], pos[1], pos[2], color='y', s=100)
+    ax.quiver(*np.array(points[6]), orientation[0], orientation[1], orientation[2], length=30, color='g')
+    ax.quiver(*np.array(points[6]), rob_ori[0], rob_ori[1], rob_ori[2], length=30, color='k')
     # Label axes
     ax.set_xlabel("X-axis")
     ax.set_ylabel("Y-axis")
