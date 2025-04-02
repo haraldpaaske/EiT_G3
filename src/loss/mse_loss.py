@@ -5,11 +5,14 @@ from torch import cos, sin, sqrt, atan2, ones_like, ones, zeros, zeros_like
 
 class MSELoss(BaseLoss):
     def transform_output(self, theta):
-        size = theta.shape[0]
-        alpha = torch.Tensor([0,90,90,0,-90,-90,90,-90,0])
+        size = theta.shape[0] #Batch size
+
+        #Arm configuration
+        alpha = torch.Tensor([0,90,90,0,-90,-90,90,-90,0]) 
         d= torch.Tensor([0,0.479,0.5,0.178,0,0.0557,0.536,0,0.237])
         r = torch.Tensor([0.566,-0.067,0,1.3,0.489,0,0,0,0])
 
+        #Denavit hartenberg for theta
         theta = torch.column_stack([torch.zeros(size), 
                                 torch.full((size,), 90) + theta[:,0],
                                 torch.full((size,), 90),
@@ -20,7 +23,7 @@ class MSELoss(BaseLoss):
                                 theta[:,4],
                                 theta[:,5],
                                 ])
-        N = 9
+        N = 9 #Number of joints
 
         alpha = alpha.unsqueeze(0).expand(size,-1)
         r = r.unsqueeze(0).expand(size,-1)
