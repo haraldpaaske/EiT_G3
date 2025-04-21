@@ -11,17 +11,17 @@ from sklearn.preprocessing import MinMaxScaler
 neurons = 100
 num_layers = 10
 lr = 5e-4
-num_epochs = 30
-normalize = False
+num_epochs = 50
+normalize = True
 sched = True
 cos_dec = False
-gamma = 0.1
+gamma = 0.6
 step_size = 5
 
 
-samp = '30k'
-train = 'KUKA/data/dataset/dataset30000/train.json'
-val = 'KUKA/data/dataset/dataset30000/val.json'
+samp = '60k'
+train = 'KUKA/data/dataset/dataset60000/train.json'
+val = 'KUKA/data/dataset/dataset60000/val.json'
 train_df = pd.read_json(train)
 val_df = pd.read_json(val)
 
@@ -110,7 +110,7 @@ for epoch in range(num_epochs):
     loss_list.append(running_loss)
     
 os.makedirs(f'marius_template/models/{num_layers}_{neurons}', exist_ok=True)          
-torch.save(model.state_dict(), f'marius_template/models/{num_layers}_{neurons}/{lr}_{samp}_{gamma}_{step_size}.pht')    
+torch.save(model.state_dict(), f'marius_template/models/{num_layers}_{neurons}/{lr}_{samp}_{gamma}_{step_size}_norm_tanh.pht')    
 
 
 
@@ -120,6 +120,7 @@ fig, axes = plt.subplots(1, 2, figsize=(16, 5))  # 1 row, 2 columns
 axes[0].plot(loss_list)
 axes[0].set_title(f'lr = {lr} - Loss')
 axes[0].grid(True)
+axes[0].set_ylim([0, 1000000])
 axes[1].plot(val_list)
 axes[1].set_title(f'lr = {lr} - Validation')
 axes[1].grid(True)
@@ -127,6 +128,6 @@ plt.tight_layout()
 
 # Save the combined figure
 os.makedirs(f'marius_template/loss/{num_layers}_{neurons}', exist_ok=True)
-plt.savefig(f'marius_template/loss/{num_layers}_{neurons}/{lr}_{samp}_{gamma}_{step_size}.png')
+plt.savefig(f'marius_template/loss/{num_layers}_{neurons}/{lr}_{samp}_{gamma}_{step_size}_norm_tanh.png')
 
 

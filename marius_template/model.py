@@ -29,7 +29,7 @@ class kinematic_NN(nn.Module):
         Feedforward function for the neural network, used both for training and prediction. 
         Args:
             input: Torch tensor of size [in_dim, N]
-        
+
         returns torch tensor of size [out_dim, N]
 
         (N: arbitrary sized dimention)

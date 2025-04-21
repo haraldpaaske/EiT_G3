@@ -81,6 +81,8 @@ class DataFrameDataset(Dataset):
 def kin_plot(theta, goal, name):
     theta = theta.detach().numpy()
     t_s, a_s, r_s, d_s = sm.symbols('θ α a d')
+    pos = goal[:3]
+    ori = goal[3:]
 
     T = sm.Matrix([[sm.cos(t_s), -sm.sin(t_s)*sm.cos(a_s),  sm.sin(t_s)*sm.sin(a_s), r_s*sm.cos(t_s)],
                [sm.sin(t_s),  sm.cos(t_s)*sm.cos(a_s), -sm.cos(t_s)*sm.sin(a_s), r_s*sm.sin(t_s)],
@@ -107,7 +109,7 @@ def kin_plot(theta, goal, name):
     param = np.array([theta[0], alpha, r, d])
     param= np.transpose(param)
     
-
+    
     points = np.array([[0,0,0]])
     Tt = np.eye(4)
     for par in param:
@@ -116,19 +118,18 @@ def kin_plot(theta, goal, name):
 
     
     X, Y, Z = points[:,0], points[:,1], points[:,2]
-
+    
     rotation = R.from_euler('xyz', ori, degrees=False)
-    rotation_matrix =rotation.as_matrix()
+    rotation_matrix = rotation.as_matrix()
     reference = np.array([0,0,1])
-    orientation =rotation_matrix@reference
+    orientation = rotation_matrix@reference
     rob_ori = Tt[:3,:3]@reference
-    print(ori)
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.plot(X, Y, Z, '-o', markersize=8, label="Robot Arm")
     ax.scatter(X, Y, Z, color='r', s=50)  # Mark joints
-    ax.scatter(pos[0], pos[1], pos[2], color='y', s=100)
+    ax.scatter(pos[0], pos[1], pos[2], color='y', s=200)
     ax.quiver(*np.array(points[6]), orientation[0], orientation[1], orientation[2], length=30, color='g')
     ax.quiver(*np.array(points[6]), rob_ori[0], rob_ori[1], rob_ori[2], length=30, color='k')
     # Label axes
@@ -137,6 +138,7 @@ def kin_plot(theta, goal, name):
     ax.set_zlabel("Z-axis")
     ax.set_title("3D Robot Arm Visualization")
     ax.legend()
+    ax.grid(True)
     
     plt.savefig(f'{name}.png')
     plt.show()
