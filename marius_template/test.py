@@ -16,9 +16,10 @@ start_time = time.time()
 model = kinematic_NN(neurons=neurons, num_layers=num_layers)
 
 
-model.load_state_dict(torch.load(f'marius_template/models/{num_layers}_{neurons}/{lr}_{data}_0.5_5.pht'))
+# model.load_state_dict(torch.load(f'marius_template/models/{num_layers}_{neurons}/{lr}_{data}_0.5_5.pht'))
+# model.eval()
+model.load_state_dict(torch.load(f'marius_template/models/{num_layers}_{neurons}/final.pht'))
 model.eval()
-
 #INPUTS___________________
 x = -100
 y = -50
