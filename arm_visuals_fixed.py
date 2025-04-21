@@ -1,3 +1,4 @@
+import time
 
 import numpy as np
 import plotly.graph_objects as go
@@ -114,8 +115,12 @@ def plot_robot_arm(joint_positions, target_position):
 
 
 if __name__ == "__main__":
-    x, y, z = map(float, input("Enter target coordinates (x, y, z): ").split(","))
-
+    #x, y, z = map(float, input("Enter target coordinates (x, y, z): ").split(","))
+    start_time = time.perf_counter()
+    x, y, z = [0.6098, 0.9133, 1.8862]
     result = inverse_kinematics(x,y,z)
+    end_time = time.perf_counter()
+    print((end_time - start_time) * 100000)
     if result:
         plot_robot_arm(result["Joint Positions"], (x, y, z))
+        print(result["Joint Positions"])
