@@ -36,7 +36,7 @@ theta5_min, theta5_max =   np.radians(-120),  np.radians(120)  # Joint 5
 theta6_min, theta6_max =   np.radians(-350),  np.radians(350)  # Joint 6
 
 #Number of points in dataset
-num_samples = 30000
+num_samples = 60000
 
 theta1 = np.random.uniform(theta1_min, theta1_max, num_samples)
 theta2 = np.random.uniform(theta2_min, theta2_max, num_samples)
